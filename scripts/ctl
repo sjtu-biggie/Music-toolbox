@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# scripts/ctl — process control for ai-music services
+set -euo pipefail
+
+BACKEND_SESSION="ai-music-backend"
+FRONTEND_SESSION="ai-music-frontend"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+_start_backend() {
+    if tmux has-session -t "$BACKEND_SESSION" 2>/dev/null; then
+        echo "Backend already running"; return
+    fi
+    mkdir -p "$PROJECT_ROOT/logs"
+    tmux new-session -ds "$BACKEND_SESSION" \
+        "cd '$PROJECT_ROOT' && uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 2>&1 | tee '$PROJECT_ROOT/logs/backend.log'"
+    echo "Backend started → http://localhost:8000"
+}
+
+_start_frontend() {
+    if tmux has-session -t "$FRONTEND_SESSION" 2>/dev/null; then
+        echo "Frontend already running"; return
+    fi
+    mkdir -p "$PROJECT_ROOT/logs"
+    tmux new-session -ds "$FRONTEND_SESSION" \
+        "cd '$PROJECT_ROOT/frontend' && streamlit run app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true 2>&1 | tee '$PROJECT_ROOT/logs/frontend.log'"
+    echo "Frontend started → http://localhost:8501"
+}
+
+_stop() {
+    local session="$1"
+    if tmux has-session -t "$session" 2>/dev/null; then
+        tmux kill-session -t "$session" && echo "Stopped $session"
+    else
+        echo "$session not running"
+    fi
+}
+
+_status() {
+    echo "Backend:  $(tmux has-session -t "$BACKEND_SESSION" 2>/dev/null && echo 'running' || echo 'stopped')"
+    echo "Frontend: $(tmux has-session -t "$FRONTEND_SESSION" 2>/dev/null && echo 'running' || echo 'stopped')"
+}
+
+_test() {
+    local mode="${1:-all}"
+    cd "$PROJECT_ROOT"
+    case "$mode" in
+        unit)        pytest tests/ -v -m "not integration" ;;
+        integration) bash scripts/run_integration_test.sh ;;
+        watch)       pytest-watch tests/ -- -v -m "not integration" ;;
+        *)           pytest tests/ -v -m "not integration" && bash scripts/run_integration_test.sh ;;
+    esac
+}
+
+CMD="${1:-help}"
+TARGET="${2:-all}"
+case "$CMD" in
+    start)
+        [[ "$TARGET" == "backend"  || "$TARGET" == "all" ]] && _start_backend
+        [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]] && _start_frontend
+        ;;
+    stop)
+        [[ "$TARGET" == "backend"  || "$TARGET" == "all" ]] && _stop "$BACKEND_SESSION"
+        [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]] && _stop "$FRONTEND_SESSION"
+        ;;
+    restart)
+        "$0" stop "$TARGET"; sleep 1; "$0" start "$TARGET" ;;
+    status) _status ;;
+    test)   _test "${2:-all}" ;;
+    logs)
+        [[ "$TARGET" == "backend"  ]] && tail -f "$PROJECT_ROOT/logs/backend.log"
+        [[ "$TARGET" == "frontend" ]] && tail -f "$PROJECT_ROOT/logs/frontend.log"
+        ;;
+    *)
+        echo "Usage: ctl [start|stop|restart|status|test|logs] [backend|frontend|all]"
+        echo "       ctl test [unit|integration|watch|all]"
+        ;;
+esac
