@@ -35,10 +35,8 @@ def render():
                     st.session_state["tracks"].append(track_entry)
                     st.session_state["active_track_id"] = result["track_id"]
                     display = f"{track_name.strip()} ({result['track_id'][:8]}...)"
-                    st.success(
-                        f"Recording processed — {display}, {result['duration_sec']:.1f}s. "
-                        "Switch to the Editor tab."
-                    )
+                    st.success(f"Recording processed — {display}, {result['duration_sec']:.1f}s.")
+                    st.info("Switch to the Editor tab to view and play your track.")
                 except Exception as e:
                     st.error(f"Failed: {e}")
 

@@ -92,3 +92,4 @@ async def test_record_accepts_audio_blob(client, wav_bytes):
     data = resp.json()
     assert "track_id" in data
     assert data["duration_sec"] > 0
+    assert data["sample_rate"] > 0

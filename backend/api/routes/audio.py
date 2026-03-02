@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from uuid import uuid4
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from ...config import StaticConfig
@@ -18,7 +19,6 @@ async def upload_audio(file: UploadFile = File(...)):
     if suffix not in _ALLOWED:
         raise HTTPException(400, f"Unsupported format '{suffix}'. Allowed: {_ALLOWED}")
     StaticConfig.ensure_dirs()
-    from uuid import uuid4
     track_id = uuid4()
     raw_path = StaticConfig.TRACKS_DIR / f"{track_id}{suffix}"
     wav_path = StaticConfig.AUDIO_DIR / f"{track_id}.wav"
@@ -41,10 +41,15 @@ async def upload_audio(file: UploadFile = File(...)):
 async def record_audio(file: UploadFile = File(...)):
     """Accept browser mic recording blob. Identical pipeline to /upload."""
     StaticConfig.ensure_dirs()
-    from uuid import uuid4
     track_id = uuid4()
-    # Browser may send webm/ogg — librosa handles it via ffmpeg
-    suffix = ".webm" if "webm" in (file.content_type or "") else ".wav"
+    # Chromium sends audio/webm, Firefox sends audio/ogg — librosa handles both via ffmpeg
+    ct = (file.content_type or "").lower()
+    if "webm" in ct:
+        suffix = ".webm"
+    elif "ogg" in ct:
+        suffix = ".ogg"
+    else:
+        suffix = ".wav"
     raw_path = StaticConfig.TRACKS_DIR / f"{track_id}{suffix}"
     wav_path = StaticConfig.AUDIO_DIR / f"{track_id}.wav"
     with open(raw_path, "wb") as f:
