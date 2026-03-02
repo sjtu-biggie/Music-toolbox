@@ -44,10 +44,11 @@ _test() {
     local mode="${1:-all}"
     cd "$PROJECT_ROOT"
     case "$mode" in
-        unit)        pytest tests/ -v -m "not integration" ;;
+        unit)        pytest tests/ -v -m "not integration" && (cd frontend && npm test) ;;
+        frontend)    cd frontend && npm test ;;
         integration) bash scripts/run_integration_test.sh ;;
         watch)       pytest-watch tests/ -- -v -m "not integration" ;;
-        *)           pytest tests/ -v -m "not integration" && bash scripts/run_integration_test.sh ;;
+        *)           pytest tests/ -v -m "not integration" && (cd frontend && npm test) && bash scripts/run_integration_test.sh ;;
     esac
 }
 
