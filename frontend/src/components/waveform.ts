@@ -1,10 +1,17 @@
 import WaveSurfer from "wavesurfer.js";
-import { getState } from "../state";
-import { extractMidi, getNotes, synthesize, originalUrl } from "../api";
+import { getState, setState } from "../state";
+import { extractMidi, getNotes, synthesize, playbackUrl } from "../api";
 import { renderToolbar } from "./toolbar";
 import type { Note } from "../api";
 
+let activeWaveSurfer: WaveSurfer | null = null;
+
 export function renderEditorView(container: HTMLElement) {
+  if (activeWaveSurfer) {
+    activeWaveSurfer.destroy();
+    activeWaveSurfer = null;
+  }
+
   const { activeTrackId, tracks } = getState();
 
   if (!activeTrackId) {
@@ -45,8 +52,9 @@ export function renderEditorView(container: HTMLElement) {
     progressColor: "#e94560",
     cursorColor: "#e94560",
     height: 80,
-    url: originalUrl(activeTrackId),
+    url: playbackUrl(activeTrackId),
   });
+  activeWaveSurfer = ws;
 
   renderToolbar(document.getElementById("toolbar-mount")!, {
     onPlay: () => ws.play(),
@@ -76,10 +84,8 @@ export function renderEditorView(container: HTMLElement) {
 
   document.getElementById("track-select")!.addEventListener("change", (e) => {
     const select = e.target as HTMLSelectElement;
-    import("../state").then(({ setState }) => {
-      setState({ activeTrackId: select.value });
-      renderEditorView(container);
-    });
+    setState({ activeTrackId: select.value });
+    renderEditorView(container);
   });
 
   function renderNoteList(notes: Note[]) {

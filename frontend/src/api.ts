@@ -67,14 +67,6 @@ export function playbackUrl(trackId: string): string {
   return `/audio/${trackId}/playback`;
 }
 
-export function originalUrl(trackId: string): string {
-  return `/audio/${trackId}/original`;
-}
-
-export function regionUrl(trackId: string, startSec: number, endSec: number): string {
-  return `/audio/${trackId}/region?start_sec=${startSec}&end_sec=${endSec}`;
-}
-
 export async function getWaveform(trackId: string): Promise<WaveformData> {
   return request(`/audio/${trackId}/waveform`);
 }

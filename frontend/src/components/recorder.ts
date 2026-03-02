@@ -22,6 +22,7 @@ export function renderRecorder(container: HTMLElement) {
 
   let mediaRecorder: MediaRecorder | null = null;
   let chunks: Blob[] = [];
+  let previewUrl: string | null = null;
 
   startBtn.addEventListener("click", async () => {
     try {
@@ -31,7 +32,9 @@ export function renderRecorder(container: HTMLElement) {
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: "audio/wav" });
-        preview.src = URL.createObjectURL(blob);
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(blob);
+        preview.src = previewUrl;
         preview.classList.remove("hidden");
         processBtn.classList.remove("hidden");
         processBtn.onclick = async () => {
