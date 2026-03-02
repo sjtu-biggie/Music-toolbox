@@ -10,6 +10,15 @@ def upload_audio(file_bytes: bytes, filename: str) -> dict:
     return resp.json()
 
 
+def record_audio(audio_bytes: bytes, filename: str = "recording.wav") -> dict:
+    resp = _client.post(
+        "/audio/record",
+        files={"file": (filename, audio_bytes, "audio/wav")},
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
 def get_waveform(track_id: str) -> dict:
     resp = _client.get(f"/audio/{track_id}/waveform")
     resp.raise_for_status()

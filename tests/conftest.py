@@ -1,3 +1,14 @@
+import sys
+from pathlib import Path as _Path
+from unittest.mock import MagicMock
+
+# Mock heavy deps incompatible with Python 3.12 at test time
+_bp_mock = MagicMock()
+_bp_mock.ICASSP_2022_MODEL_PATH = _Path("/mock/model")
+sys.modules.setdefault("basic_pitch", _bp_mock)
+sys.modules.setdefault("basic_pitch.inference", MagicMock(predict=MagicMock()))
+sys.modules.setdefault("midi2audio", MagicMock())
+
 import numpy as np
 import soundfile as sf
 import pretty_midi
