@@ -22,8 +22,8 @@ _start_frontend() {
     fi
     mkdir -p "$PROJECT_ROOT/logs"
     tmux new-session -ds "$FRONTEND_SESSION" \
-        "cd '$PROJECT_ROOT/frontend' && streamlit run app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true 2>&1 | tee '$PROJECT_ROOT/logs/frontend.log'"
-    echo "Frontend started → http://localhost:8501"
+        "cd '$PROJECT_ROOT/frontend' && npm run dev 2>&1 | tee '$PROJECT_ROOT/logs/frontend.log'"
+    echo "Frontend started → http://localhost:5173"
 }
 
 _stop() {
