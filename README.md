@@ -19,12 +19,12 @@ pip install -e .
 ## Running
 
 ```bash
-scripts/ctl start        # starts backend (port 8000) and frontend (port 8501)
+scripts/ctl start        # starts backend (port 8000) and frontend (port 5173)
 scripts/ctl status       # check running state
 scripts/ctl logs backend # tail backend logs
 ```
 
-Open `http://localhost:8501` in your browser.
+Open `http://localhost:5173` in your browser.
 
 ## Testing
 
@@ -38,7 +38,7 @@ scripts/ctl test watch        # TDD watch mode
 ## Architecture
 
 - `backend/` — FastAPI API (port 8000). Audio processing, MIDI, AI providers.
-- `frontend/` — Streamlit UI (port 8501). Thin HTTP client only.
+- `frontend/` — Vite + TypeScript SPA (port 5173). Thin HTTP client only.
 - `docs/plans/` — Phase implementation plans.
 - `scripts/ctl` — process control.
 

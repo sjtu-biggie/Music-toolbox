@@ -26,7 +26,7 @@ testpaths = ["tests"]
 markers = ["integration: marks tests as integration tests (deselect with '-m not integration')"]
 
 [tool.setuptools.packages.find]
-include = ["backend*", "frontend*"]
+include = ["backend*"]
 
 [build-system]
 requires = ["setuptools"]
