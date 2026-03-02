@@ -4,7 +4,7 @@
 
 **Goal:** Add three AI modification modes (Style Transfer, Melody Variation, Accompaniment) with a local MusicGen-Melody / Replicate toggle, async job execution, seamless audio splicing, and before/after comparison playback.
 
-**Architecture:** `AIProvider` ABC with two implementations. `ai_service` handles segment slicing, provider dispatch, and seamless splicing (resample → duration-match → RMS-normalize → crossfade). FastAPI `BackgroundTasks` for async execution. Stale job recovery on server startup. Streamlit polls job status and presents a toggle comparison.
+**Architecture:** `AIProvider` ABC with two implementations. `ai_service` handles segment slicing, provider dispatch, and seamless splicing (resample → duration-match → RMS-normalize → crossfade). FastAPI `BackgroundTasks` for async execution. Stale job recovery on server startup. Frontend AI panel reuses the piano roll region selection, polls job status via `setInterval` + fetch, and presents side-by-side WaveSurfer.js mini-players for A/B comparison.
 
 **Tech Stack:** `transformers` (MusicGenMelody), `replicate` SDK, `torchaudio`, `soundfile`, `librosa`, FastAPI `BackgroundTasks`.
 
@@ -1551,185 +1551,316 @@ git commit -m "feat: AI routes — modify, job poll, compare, splice; startup st
 
 ---
 
-## Task 8: Frontend — AI Modification Page
+## Task 8: Frontend — AI Panel Component
 
 **Files:**
-- Modify: `frontend/api_client.py`
-- Create: `frontend/pages/ai_modify.py`
-- Modify: `frontend/app.py`
+- Modify: `frontend/src/api.ts` (add AI methods)
+- Create: `frontend/src/components/ai-panel.ts`
+- Modify: `frontend/src/components/waveform.ts` (add AI button to toolbar)
 
-### Step 1: Add AI methods to api_client.py
+### Step 1: Add AI methods to api.ts
 
-```python
-# append to frontend/api_client.py
-import time
+```typescript
+// append to frontend/src/api.ts
 
-def request_ai_modify(
-    track_id: str, mode: str, prompt: str,
-    start_sec: float, end_sec: float, provider: str
-) -> str:
-    resp = _client.post(f"/ai/{track_id}/modify", json={
-        "mode": mode, "prompt": prompt,
-        "start_sec": start_sec, "end_sec": end_sec, "provider": provider,
-    }, timeout=10.0)
-    resp.raise_for_status()
-    return resp.json()["job_id"]
-
-
-def poll_job(job_id: str) -> dict:
-    resp = _client.get(f"/ai/jobs/{job_id}")
-    resp.raise_for_status()
-    return resp.json()
-
-
-def splice_ai_result(track_id: str, job_id: str, force_duration_match: bool = False) -> str:
-    """Splice AI output into full track. Returns new spliced_track_id."""
-    resp = _client.post(
-        f"/ai/{track_id}/splice",
-        json={"job_id": job_id, "force_duration_match": force_duration_match},
-        timeout=30.0,
-    )
-    resp.raise_for_status()
-    return resp.json()["spliced_track_id"]
-
-
-def get_ai_result_url(job_id: str) -> str:
-    return f"{BACKEND_URL}/ai/jobs/{job_id}/result"
-
-
-def get_playback_url(track_id: str) -> str:
-    return f"{BACKEND_URL}/audio/{track_id}/playback"
-```
-
-### Step 2: Create ai_modify page
-
-```python
-# frontend/pages/ai_modify.py
-"""
-AI Modification tab.
-
-Flow:
-  1. User selects region (start/end seconds), mode, provider, and prompt.
-  2. Click "Generate" → POST /ai/{track_id}/modify → poll until done.
-  3. Compare: toggle between original and AI segment.
-  4. "Apply to Track" → POST /ai/{track_id}/splice → load spliced track for editing.
-"""
-import time
-import streamlit as st
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-import api_client
-
-MODES = {
-    "Style Transfer": "style",
-    "Melody Variation": "melody",
-    "Accompaniment": "accompaniment",
+export interface AIJob {
+  job_id: string;
+  status: "pending" | "running" | "done" | "failed";
+  result_url?: string;
+  error_msg?: string;
 }
 
+export async function requestAIModify(
+  trackId: string,
+  mode: "style" | "melody" | "accompaniment",
+  prompt: string,
+  startSec: number,
+  endSec: number,
+  provider: "local" | "replicate"
+): Promise<{ job_id: string }> {
+  return request(`/ai/${trackId}/modify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mode, prompt, start_sec: startSec, end_sec: endSec, provider,
+    }),
+  });
+}
 
-def render():
-    st.header("AI Modification")
-    track_id = st.session_state.get("track_id")
-    if not track_id:
-        st.info("Upload or record a track first.")
-        return
+export async function pollJob(jobId: string): Promise<AIJob> {
+  return request(`/ai/jobs/${jobId}`);
+}
 
-    # Sidebar: provider toggle
-    provider = "local" if st.sidebar.toggle("Use Local GPU (MusicGen)", value=True) else "replicate"
-    st.sidebar.caption("Local: free, GPU recommended. Replicate: ~$0.07/call, no GPU needed.")
+export function aiResultUrl(jobId: string): string {
+  return `/ai/jobs/${jobId}/result`;
+}
 
-    mode_label = st.radio("Modification Mode", list(MODES.keys()), horizontal=True)
-    mode = MODES[mode_label]
-
-    col1, col2 = st.columns(2)
-    with col1:
-        start_sec = st.number_input("Segment start (s)", 0.0, value=0.0, step=0.1)
-    with col2:
-        end_sec = st.number_input("Segment end (s)", 0.0, value=5.0, step=0.1)
-
-    if start_sec >= end_sec:
-        st.warning("Start must be less than end.")
-        return
-
-    prompt = st.text_input("Prompt", placeholder="e.g. make it jazzy, add blues feeling...")
-
-    if st.button("Generate AI Version", disabled=not prompt.strip()):
-        with st.spinner(f"Queuing {mode_label} job ({provider})..."):
-            try:
-                job_id = api_client.request_ai_modify(
-                    track_id, mode, prompt, start_sec, end_sec, provider
-                )
-                st.session_state["last_job_id"] = job_id
-                st.session_state["last_job_start"] = start_sec
-                st.session_state["last_job_end"] = end_sec
-            except Exception as exc:
-                st.error(f"Failed to start job: {exc}")
-                return
-
-        # Poll until done (max 5 minutes)
-        status_ph = st.empty()
-        for _ in range(150):
-            job = api_client.poll_job(job_id)
-            status_ph.caption(f"Job status: **{job['status']}**")
-            if job["status"] == "done":
-                st.success("Generation complete!")
-                break
-            if job["status"] == "failed":
-                st.error(f"Job failed: {job.get('error_msg', 'unknown error')}")
-                return
-            time.sleep(2)
-        else:
-            st.warning("Timed out waiting for job. Refresh to check status.")
-
-    # Comparison toggle
-    job_id = st.session_state.get("last_job_id")
-    if job_id:
-        job = api_client.poll_job(job_id)
-        if job["status"] == "done":
-            st.subheader("Compare")
-            show_modified = st.toggle("AI version", value=True)
-            if show_modified:
-                st.caption("AI Modified Segment")
-                st.audio(api_client.get_ai_result_url(job_id))
-            else:
-                st.caption("Original Playback")
-                st.audio(api_client.get_playback_url(track_id))
-
-            force_match = st.checkbox("Force exact original length (trim/pad AI output)", value=False)
-            if st.button("Apply to Track (splice AI into full track)"):
-                with st.spinner("Splicing..."):
-                    try:
-                        spliced_id = api_client.splice_ai_result(track_id, job_id, force_duration_match=force_match)
-                        st.session_state["track_id"] = spliced_id
-                        st.success(f"Applied! New track id: {spliced_id}")
-                        st.rerun()
-                    except Exception as exc:
-                        st.error(f"Splice failed: {exc}")
+export async function spliceAIResult(
+  trackId: string, jobId: string, forceDurationMatch = false
+): Promise<{ spliced_track_id: string }> {
+  return request(`/ai/${trackId}/splice`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job_id: jobId, force_duration_match: forceDurationMatch }),
+  });
+}
 ```
 
-### Step 3: Add AI tab to app.py
+### Step 2: Create AI panel component
 
-```python
-# frontend/app.py
-import streamlit as st
+The AI panel is a collapsible drawer that slides in from the right or expands below the piano roll. It reuses the region already selected in the piano roll / waveform — no separate region inputs needed.
 
-st.set_page_config(page_title="AI Music", layout="wide")
-st.title("AI Music")
+```typescript
+// frontend/src/components/ai-panel.ts
+import WaveSurfer from "wavesurfer.js";
+import { requestAIModify, pollJob, aiResultUrl, spliceAIResult, regionUrl } from "../api";
+import { getState, setState } from "../state";
 
-with st.sidebar:
-    st.header("Settings")
+export interface AIPanelOptions {
+  trackId: string;
+  /** Returns the currently selected region, or null if none */
+  getRegion: () => { startSec: number; endSec: number } | null;
+  /** Called after splice creates a new track */
+  onTrackCreated: (splicedTrackId: string) => void;
+}
 
-tab_record, tab_upload, tab_editor, tab_ai = st.tabs(["Record", "Upload", "Editor", "AI Modify"])
+export function renderAIPanel(container: HTMLElement, options: AIPanelOptions) {
+  const { trackId, getRegion, onTrackCreated } = options;
 
-with tab_record:
-    from pages.record import render; render()
-with tab_upload:
-    from pages.upload import render; render()
-with tab_editor:
-    from pages.editor import render; render()
-with tab_ai:
-    from pages.ai_modify import render; render()
+  container.innerHTML = `
+    <div class="card ai-panel">
+      <h3>AI Modify</h3>
+
+      <div style="margin-bottom: 0.75rem;">
+        <label>Mode:</label>
+        <div class="ai-mode-buttons" style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+          <button class="ai-mode active" data-mode="style">Style Transfer</button>
+          <button class="ai-mode" data-mode="melody">Melody Variation</button>
+          <button class="ai-mode" data-mode="accompaniment">Accompaniment</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 0.75rem;">
+        <label>Provider:</label>
+        <div style="display:flex; gap:1rem; margin-top:0.25rem;">
+          <label><input type="radio" name="ai-provider" value="local" checked /> Local GPU</label>
+          <label><input type="radio" name="ai-provider" value="replicate" /> Cloud (Replicate)</label>
+        </div>
+      </div>
+
+      <div id="ai-region-display" style="margin-bottom: 0.75rem; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-secondary);">
+        No region selected — drag on waveform or piano roll first.
+      </div>
+
+      <div style="margin-bottom: 0.75rem;">
+        <textarea id="ai-prompt" rows="2" placeholder="Describe the style you want, e.g. 'jazz saxophone', 'upbeat electronic'..."
+          style="width:100%; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border); border-radius:4px; padding:0.5rem; font-size:0.9rem; resize:vertical;"></textarea>
+      </div>
+
+      <button id="ai-generate" style="width:100%; margin-bottom:0.75rem;">Generate</button>
+
+      <div id="ai-status" style="font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 0.75rem;"></div>
+
+      <div id="ai-result" class="hidden">
+        <h4>Compare</h4>
+        <div style="display:flex; gap:1rem; margin-bottom:0.75rem;">
+          <div style="flex:1;">
+            <p style="font-size:0.85rem; color:var(--text-secondary);">Original</p>
+            <div id="ai-waveform-original"></div>
+          </div>
+          <div style="flex:1;">
+            <p style="font-size:0.85rem; color:var(--text-secondary);">AI Modified</p>
+            <div id="ai-waveform-modified"></div>
+          </div>
+        </div>
+        <button id="ai-apply" style="width:100%;">Apply to Track</button>
+      </div>
+    </div>
+  `;
+
+  let selectedMode: "style" | "melody" | "accompaniment" = "style";
+  let currentJobId: string | null = null;
+  let pollTimer: number | null = null;
+
+  // Mode buttons
+  container.querySelectorAll<HTMLButtonElement>(".ai-mode").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      container.querySelectorAll(".ai-mode").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedMode = btn.dataset.mode as typeof selectedMode;
+    });
+  });
+
+  // Update region display
+  function updateRegionDisplay() {
+    const region = getRegion();
+    const display = document.getElementById("ai-region-display")!;
+    if (region) {
+      display.textContent = `Selected: ${region.startSec.toFixed(2)}s — ${region.endSec.toFixed(2)}s`;
+    } else {
+      display.textContent = "No region selected — drag on waveform or piano roll first.";
+    }
+  }
+
+  // Poll and update region display periodically
+  const regionCheckTimer = setInterval(updateRegionDisplay, 500);
+
+  // Generate button
+  document.getElementById("ai-generate")!.addEventListener("click", async () => {
+    const region = getRegion();
+    if (!region) {
+      document.getElementById("ai-status")!.textContent = "Select a region first.";
+      return;
+    }
+
+    const prompt = (document.getElementById("ai-prompt") as HTMLTextAreaElement).value.trim();
+    if (!prompt) {
+      document.getElementById("ai-status")!.textContent = "Enter a prompt.";
+      return;
+    }
+
+    const provider = (container.querySelector<HTMLInputElement>("input[name='ai-provider']:checked"))!.value as "local" | "replicate";
+    const statusEl = document.getElementById("ai-status")!;
+    const generateBtn = document.getElementById("ai-generate") as HTMLButtonElement;
+
+    generateBtn.disabled = true;
+    statusEl.textContent = "Submitting job...";
+
+    try {
+      const { job_id } = await requestAIModify(trackId, selectedMode, prompt, region.startSec, region.endSec, provider);
+      currentJobId = job_id;
+      statusEl.textContent = `Job ${job_id.slice(0, 8)}... submitted. Polling...`;
+
+      // Poll every 2 seconds
+      pollTimer = window.setInterval(async () => {
+        try {
+          const job = await pollJob(job_id);
+          statusEl.textContent = `Job status: ${job.status}`;
+
+          if (job.status === "done") {
+            clearInterval(pollTimer!);
+            pollTimer = null;
+            generateBtn.disabled = false;
+            statusEl.textContent = "Generation complete!";
+            showResult(region);
+          } else if (job.status === "failed") {
+            clearInterval(pollTimer!);
+            pollTimer = null;
+            generateBtn.disabled = false;
+            statusEl.textContent = `Failed: ${job.error_msg || "unknown error"}`;
+          }
+        } catch (err) {
+          statusEl.textContent = `Poll error: ${err}`;
+        }
+      }, 2000);
+    } catch (err) {
+      statusEl.textContent = `Error: ${err}`;
+      generateBtn.disabled = false;
+    }
+  });
+
+  function showResult(region: { startSec: number; endSec: number }) {
+    const resultDiv = document.getElementById("ai-result")!;
+    resultDiv.classList.remove("hidden");
+
+    // Original region mini-player
+    const origContainer = document.getElementById("ai-waveform-original")!;
+    origContainer.innerHTML = "";
+    WaveSurfer.create({
+      container: origContainer,
+      waveColor: "#4a4a6a",
+      progressColor: "#4caf50",
+      height: 48,
+      url: regionUrl(trackId, region.startSec, region.endSec),
+    });
+
+    // AI result mini-player
+    const modContainer = document.getElementById("ai-waveform-modified")!;
+    modContainer.innerHTML = "";
+    WaveSurfer.create({
+      container: modContainer,
+      waveColor: "#4a4a6a",
+      progressColor: "#e94560",
+      height: 48,
+      url: aiResultUrl(currentJobId!),
+    });
+  }
+
+  // Apply to Track
+  document.getElementById("ai-apply")!.addEventListener("click", async () => {
+    if (!currentJobId) return;
+    const statusEl = document.getElementById("ai-status")!;
+    const applyBtn = document.getElementById("ai-apply") as HTMLButtonElement;
+
+    applyBtn.disabled = true;
+    statusEl.textContent = "Splicing into full track...";
+
+    try {
+      const { spliced_track_id } = await spliceAIResult(trackId, currentJobId);
+      statusEl.textContent = `Applied! New track: ${spliced_track_id.slice(0, 8)}...`;
+
+      // Add new track to state and switch to it
+      const state = getState();
+      const tracks = [...state.tracks, {
+        track_id: spliced_track_id,
+        filename: `spliced_${spliced_track_id.slice(0, 8)}`,
+        duration_sec: 0, // will be updated when editor loads
+      }];
+      setState({ tracks, activeTrackId: spliced_track_id });
+      onTrackCreated(spliced_track_id);
+    } catch (err) {
+      statusEl.textContent = `Splice failed: ${err}`;
+    }
+    applyBtn.disabled = false;
+  });
+
+  // Cleanup function
+  return () => {
+    if (pollTimer) clearInterval(pollTimer);
+    clearInterval(regionCheckTimer);
+  };
+}
+```
+
+### Step 3: Add AI button to editor toolbar
+
+Update `frontend/src/components/waveform.ts` to add an "AI" button in the toolbar that toggles the AI panel below the piano roll:
+
+```typescript
+// In renderEditorView(), after piano roll container, add:
+//   <div id="ai-panel-mount" class="hidden"></div>
+
+// Add AI toggle button to toolbar:
+const aiToggleBtn = document.createElement("button");
+aiToggleBtn.textContent = "AI";
+aiToggleBtn.title = "Toggle AI Modification Panel";
+toolbar.appendChild(aiToggleBtn);
+
+let aiPanelCleanup: (() => void) | null = null;
+
+aiToggleBtn.addEventListener("click", () => {
+  const mount = document.getElementById("ai-panel-mount")!;
+  if (mount.classList.contains("hidden")) {
+    mount.classList.remove("hidden");
+    aiToggleBtn.classList.add("active");
+    import("./ai-panel").then(({ renderAIPanel }) => {
+      aiPanelCleanup = renderAIPanel(mount, {
+        trackId: activeTrackId,
+        getRegion: () => currentRegion,
+        onTrackCreated: (splicedId) => {
+          // Re-render editor with new track
+          renderEditorView(container);
+        },
+      });
+    });
+  } else {
+    mount.classList.add("hidden");
+    mount.innerHTML = "";
+    aiToggleBtn.classList.remove("active");
+    aiPanelCleanup?.();
+    aiPanelCleanup = null;
+  }
+});
 ```
 
 ### Step 4: Manual end-to-end test
@@ -1738,17 +1869,18 @@ with tab_ai:
 scripts/ctl restart
 ```
 1. Upload a 10-15s track, extract MIDI
-2. Go to "AI Modify" tab
-3. Set region 0–5s, mode "Style Transfer", prompt "make it jazzy", Local GPU
-4. Click Generate — spinner polls until "done"
-5. Toggle between original and AI version — both should play audio
-6. Click "Apply to Track" — verify page reloads with new track_id
+2. Select a region (drag on waveform or piano roll) — e.g. 0–5s
+3. Click "AI" button → panel expands
+4. Choose "Style Transfer", Local GPU, prompt "make it jazzy"
+5. Click Generate — status polls until "done"
+6. Compare: click play on both Original and Modified mini-players
+7. Click "Apply to Track" — new track appears, editor reloads with spliced result
 
 ### Step 5: Commit
 
 ```bash
-git add frontend/api_client.py frontend/pages/ai_modify.py frontend/app.py
-git commit -m "feat: AI modification tab — generate, compare, and splice into full track"
+git add frontend/src/api.ts frontend/src/components/ai-panel.ts frontend/src/components/waveform.ts
+git commit -m "feat: AI modification panel — generate, compare, and splice into full track"
 ```
 
 ---
@@ -1799,8 +1931,11 @@ git commit -m "test: extend integration test to cover AI modify routing and heal
 - [ ] All three modes (style, melody, accompaniment) return non-empty audio
 - [ ] Spliced track plays seamlessly — no click or volume jump at splice boundaries
 - [ ] Stale job recovery: start server with a `running` job on disk → job becomes `failed` after restart
-- [ ] Toggle shows original vs AI segment
-- [ ] "Apply to Track" creates new track_id and updates editor state
+- [ ] AI panel: mode buttons, provider radio, prompt input all functional
+- [ ] AI panel: region display synced with piano roll / waveform selection
+- [ ] AI panel: Generate submits job, polls via setInterval, shows status
+- [ ] AI panel: side-by-side WaveSurfer.js mini-players for original vs AI comparison
+- [ ] AI panel: "Apply to Track" creates new track_id and reloads editor with spliced result
 - [ ] Local/Replicate sidebar toggle switches provider in real-time
 
 ## Seamless Splice Verification (Manual)

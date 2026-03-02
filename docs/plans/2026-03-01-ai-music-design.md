@@ -11,13 +11,13 @@ _Date: 2026-03-01_
 
 ## Architecture
 
-**Pattern:** FastAPI backend + Streamlit frontend (separate processes).
+**Pattern:** FastAPI backend + web frontend (separate processes).
 
 - `backend/` — all audio logic, MIDI processing, AI providers, REST API. Zero UI imports.
-- `frontend/` — thin Streamlit client. Zero audio logic. Calls backend via `api_client.py`.
-- Swapping to a React/web frontend later = replace `frontend/` only. Backend untouched.
+- `frontend/` — Phases 1–2: thin Streamlit client. Phase 2.5 onward: Vite + vanilla TypeScript SPA with WaveSurfer.js and canvas-based piano roll. Zero audio logic. Calls backend via typed HTTP client.
+- Backend is fully decoupled — frontend swap in Phase 2.5 requires zero backend changes.
 
-**Runtime:** Both processes run in WSL2. Streamlit serves a local web page accessed from the Windows browser. Mic input and audio playback go through the browser's Web Audio API — no WSL2 audio bridge needed.
+**Runtime:** Both processes run in WSL2. Frontend serves a local web page accessed from the Windows browser. Mic input and audio playback go through the browser's Web Audio API — no WSL2 audio bridge needed.
 
 ---
 
@@ -47,14 +47,28 @@ ai-music/
 │   │   └── file_repo.py           # File-based storage (Phase 1)
 │   └── models/
 │       └── schemas.py             # Pydantic models (DB-ready: UUID, timestamps)
-├── frontend/
-│   ├── app.py                     # Streamlit entry point, tab routing
-│   ├── pages/
-│   │   ├── record.py              # browser mic recording tab
-│   │   ├── upload.py              # file upload tab
-│   │   ├── editor.py              # waveform view + region select + note edit
-│   │   └── ai_modify.py           # mode select, prompt input, compare toggle
-│   └── api_client.py              # typed HTTP client for all backend calls
+├── frontend/                      # Phase 2.5+: Vite + vanilla TypeScript SPA
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   ├── src/
+│   │   ├── main.ts                # entry point, view routing
+│   │   ├── api.ts                 # typed fetch wrapper for all backend endpoints
+│   │   ├── state.ts               # simple reactive state (no framework)
+│   │   ├── components/
+│   │   │   ├── upload.ts          # file upload + track list
+│   │   │   ├── recorder.ts        # mic recording via MediaRecorder API
+│   │   │   ├── waveform.ts        # WaveSurfer.js wrapper + region selection
+│   │   │   ├── piano-roll.ts      # canvas-based piano roll editor (Phase 3)
+│   │   │   ├── toolbar.ts         # transport controls (play/pause/stop)
+│   │   │   └── ai-panel.ts        # AI mode select, prompt, job status (Phase 4)
+│   │   ├── lib/
+│   │   │   ├── canvas-utils.ts    # grid drawing, note rendering helpers
+│   │   │   └── audio-utils.ts     # region math, time formatting
+│   │   └── styles/
+│   │       └── main.css           # dark theme, CSS variables
+│   └── __legacy_streamlit/        # archived Streamlit code (deleted after Phase 2.5 verified)
 ├── tests/
 │   ├── backend/
 │   │   ├── test_audio_service.py
@@ -226,7 +240,7 @@ class AIProvider(ABC):
 
 - `MusicGenProvider` — loads `facebook/musicgen-melody` via HuggingFace `transformers`, runs on local GPU. Passes `segment_audio` as audio melody conditioning so the output follows the original melodic contour in a new style.
 - `ReplicateProvider` — calls Replicate API (~$0.07/run), no local GPU needed. Sends `segment_audio` as `input_audio` base64 data URI for melody conditioning.
-- Streamlit sidebar toggle sends `provider: "local"` or `provider: "replicate"` in request body.
+- UI provider toggle sends `provider: "local"` or `provider: "replicate"` in request body.
 - `ai_service.py` selects provider via factory (`get_provider(name)`); no config change needed to switch.
 
 **Context engineering:** `ai_service.build_prompt()` enriches the text prompt with mode-specific context. The audio segment itself is the melody conditioning input — no before/after audio is sent to the model.
@@ -268,7 +282,10 @@ The `POST /ai/{track_id}/splice` endpoint triggers this and returns a new comple
 | Concern | Tool | Notes |
 |---------|------|-------|
 | Backend framework | FastAPI + uvicorn | async, background tasks for AI jobs |
-| Frontend | Streamlit | browser-based Python UI, easy web deployment later |
+| Frontend (Phase 1–2) | Streamlit | quick prototyping for upload/record/playback |
+| Frontend (Phase 2.5+) | Vite + vanilla TypeScript | fast dev server, HMR, zero-config TS |
+| Waveform display | WaveSurfer.js | waveform rendering, playback cursor, region plugin |
+| Piano roll editor | HTML5 Canvas | custom canvas for note visualization and drag editing |
 | Audio I/O | librosa + FFmpeg | mp3/wav/m4a/flac all transparent |
 | Pitch → MIDI | Basic Pitch (Spotify) | polyphonic, runs on CPU, `pip install basic-pitch` |
 | MIDI → Audio | FluidSynth + midi2audio + GeneralUser.sf2 | free soundfont, default piano timbre |
@@ -306,18 +323,20 @@ Browser mic recording → audio blob → `POST /audio/record` → same pipeline 
 
 **Done when:** Record tab works end-to-end; integration test extended to cover mic path.
 
-### Phase 3 — Editing
-Note list in editor: edit pitch (MIDI 0–127) and timing (start/end seconds) via number inputs. Region select: start/end time inputs, play selected region only. Re-synthesize on every edit.
+### Phase 2.5 — UI Migration (Vite + TypeScript)
+Replace Streamlit frontend with a Vite + vanilla TypeScript SPA. Feature parity only — upload, record, playback, WaveSurfer.js waveform, basic note list. No new features. Delete old Streamlit frontend after verification.
 
-**Done when:** Round-trip edit test passes (edit note → synthesize → verify pitch change in output audio).
+**Done when:** All Phase 1+2 user flows work in the new UI; Streamlit `frontend/` deleted.
+
+### Phase 3 — Editing (Piano Roll)
+Canvas-based piano roll editor: notes as draggable rectangles on a pitch (y) × time (x) grid. Click note to select, drag vertically to change pitch, drag horizontally to move in time, drag edges to resize. Click+drag empty area to select a region. Region selection synced with WaveSurfer.js waveform above. Region playback and bulk pitch/timing shift via existing backend routes. Re-synthesize on edit.
+
+**Done when:** Round-trip edit test passes (drag note → synthesize → verify pitch change in output audio). Region select works in both waveform and piano roll.
 
 ### Phase 4 — AI Modification
-Three mode buttons: Style Transfer, Melody Variation, Accompaniment. Local/Replicate toggle in sidebar. Async job polling with spinner. Before/after audio comparison toggle. Context engineering: 10s before + after segment sent to provider.
+Collapsible AI panel: three mode buttons (Style Transfer, Melody Variation, Accompaniment), provider toggle (Local GPU / Cloud), text prompt input. Reuses the region selection from Phase 3 — selected region is the segment sent to AI. Async job polling via `setInterval` + fetch. Before/after comparison with side-by-side WaveSurfer.js mini-players. "Apply to Track" splices AI output into full track.
 
 **Done when:** All three modes produce non-empty audio in both providers; integration test mocks provider and verifies context assembly.
-
-### Phase 5 — Web UI (Future)
-React + WaveSurfer.js frontend replacing Streamlit. Piano roll, click-and-drag region select, playback cursor. Zero backend changes — same FastAPI API.
 
 ---
 
@@ -325,10 +344,10 @@ React + WaveSurfer.js frontend replacing Streamlit. Piano roll, click-and-drag r
 
 | Tool | Purpose |
 |------|---------|
-| `ctl [start\|stop\|restart\|status] [backend\|frontend]` | Process control via tmux named sessions |
+| `ctl [start\|stop\|restart\|status] [backend\|frontend]` | Process control via tmux named sessions (Phase 2.5+: `ctl start frontend` runs `npm run dev`) |
 | `ctl test [unit\|integration\|watch]` | Run test suite at any granularity |
 | `/new-route` skill | Checklist: route → schema → service → test → register in `main.py` |
-| Context7 MCP | On-demand library docs (Basic Pitch, FastAPI, Streamlit, MusicGen) |
+| Context7 MCP | On-demand library docs (Basic Pitch, FastAPI, WaveSurfer.js, MusicGen) |
 | Git worktrees | One worktree per phase via `superpowers:using-git-worktrees` |
 | Project `Stop` hook | End of each session: runs `ctl test`, checks if `ctl` needs updating |
 
