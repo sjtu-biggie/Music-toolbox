@@ -80,3 +80,15 @@ async def test_upload_rejects_bad_format(client):
         files={"file": ("test.xyz", b"garbage", "application/octet-stream")},
     )
     assert resp.status_code == 400
+
+
+@pytest.mark.anyio
+async def test_record_accepts_audio_blob(client, wav_bytes):
+    resp = await client.post(
+        "/audio/record",
+        files={"file": ("recording.wav", wav_bytes, "audio/wav")},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "track_id" in data
+    assert data["duration_sec"] > 0
