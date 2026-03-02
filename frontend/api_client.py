@@ -52,3 +52,19 @@ def list_instruments() -> dict:
 
 def get_synth_playback_url(track_id: str) -> str:
     return f"{BACKEND_URL}/midi/{track_id}/playback"
+
+
+def get_playback_bytes(track_id: str) -> bytes | None:
+    resp = _client.get(f"/audio/{track_id}/playback")
+    if resp.status_code == 404:
+        return None
+    resp.raise_for_status()
+    return resp.content
+
+
+def get_synth_playback_bytes(track_id: str) -> bytes | None:
+    resp = _client.get(f"/midi/{track_id}/playback")
+    if resp.status_code == 404:
+        return None
+    resp.raise_for_status()
+    return resp.content

@@ -6,9 +6,9 @@ st.title("AI Music")
 tab_upload, tab_editor = st.tabs(["Upload / Record", "Editor"])
 
 with tab_upload:
-    from pages.upload import render
+    from components.upload import render
     render()
 
 with tab_editor:
-    from pages.editor import render
+    from components.editor import render
     render()

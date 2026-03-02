@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Data files (keep folders via .gitkeep)
+data/audio/*
+data/midi/*
+data/tracks/*
+data/jobs/*
+!data/**/.gitkeep
+
+# Soundfonts (large binary)
+assets/soundfonts/*.sf2
+
+# Logs
+logs/*.log
+
+# IDE
+.vscode/
+.idea/

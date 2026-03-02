@@ -1,10 +1,1 @@
-
-Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
-
-
-  You can now view your Streamlit app in your browser.
-
-  Local URL: http://localhost:8501
-  Network URL: http://172.24.190.166:8501
-  External URL: http://68.83.13.251:8501
-
+zsh:1: command not found: streamlit

@@ -82,3 +82,240 @@ INFO:     127.0.0.1:39736 - "GET /midi/instruments/list HTTP/1.1" 200 OK
 INFO:     127.0.0.1:39736 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
 INFO:     127.0.0.1:39752 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
 INFO:     127.0.0.1:39764 - "GET /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52372 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52372 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52386 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52388 - "GET /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34660 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34660 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34670 - "GET /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34686 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38906 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38906 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38916 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38918 - "GET /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33624 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33624 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33624 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+FluidSynth runtime version 2.3.4
+Copyright (C) 2000-2023 Peter Hanappe and others.
+Distributed under the LGPL license.
+SoundFont(R) is a registered trademark of Creative Technology Ltd.
+
+Rendering audio to file '/home/gyang197/project/ai-music/data/audio/695d44db-1aa0-4b92-a2fd-dd716491c528_synth.wav'..
+INFO:     127.0.0.1:33624 - "POST /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/synthesize?instrument=trumpet HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33624 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43644 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43644 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43644 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+FluidSynth runtime version 2.3.4
+Copyright (C) 2000-2023 Peter Hanappe and others.
+Distributed under the LGPL license.
+SoundFont(R) is a registered trademark of Creative Technology Ltd.
+
+Rendering audio to file '/home/gyang197/project/ai-music/data/audio/695d44db-1aa0-4b92-a2fd-dd716491c528_synth.wav'..
+INFO:     127.0.0.1:43644 - "POST /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/synthesize?instrument=electric+guitar HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43644 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49896 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49896 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49900 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49904 - "GET /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46806 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46806 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46806 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+FluidSynth runtime version 2.3.4
+Copyright (C) 2000-2023 Peter Hanappe and others.
+Distributed under the LGPL license.
+SoundFont(R) is a registered trademark of Creative Technology Ltd.
+
+Rendering audio to file '/home/gyang197/project/ai-music/data/audio/695d44db-1aa0-4b92-a2fd-dd716491c528_synth.wav'..
+INFO:     127.0.0.1:46806 - "POST /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/synthesize?instrument=clarinet HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46806 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56002 - "GET /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "PUT /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/notes/2228294e-25ca-4525-ae84-0f9ae50cbdfc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "PUT /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/notes/2228294e-25ca-4525-ae84-0f9ae50cbdfc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+FluidSynth runtime version 2.3.4
+Copyright (C) 2000-2023 Peter Hanappe and others.
+Distributed under the LGPL license.
+SoundFont(R) is a registered trademark of Creative Technology Ltd.
+
+Rendering audio to file '/home/gyang197/project/ai-music/data/audio/695d44db-1aa0-4b92-a2fd-dd716491c528_synth.wav'..
+INFO:     127.0.0.1:50404 - "POST /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/synthesize?instrument=clarinet HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50404 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51696 - "GET /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51678 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51678 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51678 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51678 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51678 - "PUT /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/notes/2228294e-25ca-4525-ae84-0f9ae50cbdfc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51678 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+FluidSynth runtime version 2.3.4
+Copyright (C) 2000-2023 Peter Hanappe and others.
+Distributed under the LGPL license.
+SoundFont(R) is a registered trademark of Creative Technology Ltd.
+
+Rendering audio to file '/home/gyang197/project/ai-music/data/audio/695d44db-1aa0-4b92-a2fd-dd716491c528_synth.wav'..
+INFO:     127.0.0.1:51678 - "POST /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/synthesize?instrument=clarinet HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51678 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51702 - "GET /midi/695d44db-1aa0-4b92-a2fd-dd716491c528/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42430 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42430 - "GET /audio/695d44db-1aa0-4b92-a2fd-dd716491c528/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42430 - "POST /audio/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42430 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42430 - "GET /audio/19cdd9b9-9696-4093-aed9-52192e00c4a4/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42436 - "GET /audio/19cdd9b9-9696-4093-aed9-52192e00c4a4/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42444 - "GET /midi/19cdd9b9-9696-4093-aed9-52192e00c4a4/playback HTTP/1.1" 404 Not Found
+WARNING:  WatchFiles detected changes in 'frontend/pages/__init__.py', 'frontend/components/upload.py', 'frontend/components/__init__.py', 'frontend/pages/editor.py', 'frontend/pages/upload.py', 'frontend/components/editor.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1952530]
+WARNING:root:Coremltools is not installed. If you plan to use a CoreML Saved Model, reinstall basic-pitch with `pip install 'basic-pitch[coreml]'`
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+[0;93m2026-03-01 18:55:25.572291991 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"[m
+2026-03-01 18:55:26.591864: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-03-01 18:55:26.896386: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-03-01 18:55:29.407173: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+INFO:     Started server process [2005069]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'frontend/app.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2005069]
+WARNING:root:Coremltools is not installed. If you plan to use a CoreML Saved Model, reinstall basic-pitch with `pip install 'basic-pitch[coreml]'`
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+[0;93m2026-03-01 18:56:59.486872453 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"[m
+2026-03-01 18:56:59.791430: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-03-01 18:56:59.850362: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-03-01 18:57:01.494737: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+INFO:     Started server process [2005973]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'frontend/components/upload.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2005973]
+WARNING:root:Coremltools is not installed. If you plan to use a CoreML Saved Model, reinstall basic-pitch with `pip install 'basic-pitch[coreml]'`
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+[0;93m2026-03-01 18:57:11.533579674 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"[m
+2026-03-01 18:57:11.768418: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-03-01 18:57:11.818299: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-03-01 18:57:13.342935: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+INFO:     Started server process [2006111]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'frontend/components/editor.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2006111]
+WARNING:root:Coremltools is not installed. If you plan to use a CoreML Saved Model, reinstall basic-pitch with `pip install 'basic-pitch[coreml]'`
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+[0;93m2026-03-01 18:57:30.000334750 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"[m
+2026-03-01 18:57:30.221174: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-03-01 18:57:30.271258: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-03-01 18:57:31.647355: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+INFO:     Started server process [2006349]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in '.claude/worktrees/adaptive-floating-fiddle/backend/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/backend/main.py', '.claude/worktrees/adaptive-floating-fiddle/backend/models/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/backend/services/audio_service.py', '.claude/worktrees/adaptive-floating-fiddle/backend/services/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/backend/providers/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/backend/repositories/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/backend/models/schemas.py', '.claude/worktrees/adaptive-floating-fiddle/backend/api/routes/midi.py', '.claude/worktrees/adaptive-floating-fiddle/backend/api/routes/audio.py', '.claude/worktrees/adaptive-floating-fiddle/backend/api/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/backend/config.py', '.claude/worktrees/adaptive-floating-fiddle/backend/api/routes/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/backend/repositories/base.py', '.claude/worktrees/adaptive-floating-fiddle/backend/services/midi_service.py', '.claude/worktrees/adaptive-floating-fiddle/backend/repositories/file_repo.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2006349]
+WARNING:  WatchFiles detected changes in '.claude/worktrees/adaptive-floating-fiddle/tests/backend/test_file_repo.py', '.claude/worktrees/adaptive-floating-fiddle/frontend/pages/upload.py', '.claude/worktrees/adaptive-floating-fiddle/tests/backend/test_midi_service.py', '.claude/worktrees/adaptive-floating-fiddle/tests/conftest.py', '.claude/worktrees/adaptive-floating-fiddle/frontend/app.py', '.claude/worktrees/adaptive-floating-fiddle/tests/backend/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/frontend/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/tests/backend/test_audio_service.py', '.claude/worktrees/adaptive-floating-fiddle/tests/backend/test_routes.py', '.claude/worktrees/adaptive-floating-fiddle/frontend/api_client.py', '.claude/worktrees/adaptive-floating-fiddle/frontend/pages/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/tests/__init__.py', '.claude/worktrees/adaptive-floating-fiddle/frontend/pages/editor.py', '.claude/worktrees/adaptive-floating-fiddle/tests/backend/test_schemas.py'. Reloading...
+WARNING:root:Coremltools is not installed. If you plan to use a CoreML Saved Model, reinstall basic-pitch with `pip install 'basic-pitch[coreml]'`
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+[0;93m2026-03-01 19:02:10.842719832 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"[m
+2026-03-01 19:02:11.052397: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-03-01 19:02:11.109395: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-03-01 19:02:12.652746: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+INFO:     Started server process [2008950]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2008950]
+WARNING:root:Coremltools is not installed. If you plan to use a CoreML Saved Model, reinstall basic-pitch with `pip install 'basic-pitch[coreml]'`
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+[0;93m2026-03-01 19:02:14.829987781 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"[m
+2026-03-01 19:02:15.008278: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-03-01 19:02:15.051718: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-03-01 19:02:16.415484: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+INFO:     Started server process [2009263]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:45688 - "POST /audio/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45688 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45688 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45702 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45704 - "GET /midi/80d0fd79-3fd0-4029-9f16-760b103f3b0a/playback HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:40602 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40602 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40602 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40602 - "POST /midi/80d0fd79-3fd0-4029-9f16-760b103f3b0a/synthesize?instrument=organ HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:40602 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40602 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+/home/gyang197/project/linkedin/backend/venv/lib/python3.12/site-packages/tensorflow/lite/python/interpreter.py:457: UserWarning:     Warning: tf.lite.Interpreter is deprecated and is scheduled for deletion in
+    TF 2.20. Please use the LiteRT interpreter from the ai_edge_litert package.
+    See the [migration guide](https://ai.google.dev/edge/litert/migration)
+    for details.
+    
+  warnings.warn(_INTERPRETER_DELETION_WARNING)
+Predicting MIDI for /home/gyang197/project/ai-music/data/audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a.wav...
+INFO:     127.0.0.1:40602 - "POST /midi/80d0fd79-3fd0-4029-9f16-760b103f3b0a/extract HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40602 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57486 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+FluidSynth runtime version 2.3.4
+Copyright (C) 2000-2023 Peter Hanappe and others.
+Distributed under the LGPL license.
+SoundFont(R) is a registered trademark of Creative Technology Ltd.
+
+Rendering audio to file '/home/gyang197/project/ai-music/data/audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a_synth.wav'..
+INFO:     127.0.0.1:57486 - "POST /midi/80d0fd79-3fd0-4029-9f16-760b103f3b0a/synthesize?instrument=organ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57486 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53964 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53964 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53964 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53964 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53964 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+FluidSynth runtime version 2.3.4
+Copyright (C) 2000-2023 Peter Hanappe and others.
+Distributed under the LGPL license.
+SoundFont(R) is a registered trademark of Creative Technology Ltd.
+
+Rendering audio to file '/home/gyang197/project/ai-music/data/audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a_synth.wav'..
+INFO:     127.0.0.1:53964 - "POST /midi/80d0fd79-3fd0-4029-9f16-760b103f3b0a/synthesize?instrument=piano HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53964 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60074 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/playback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60146 - "GET /midi/instruments/list HTTP/1.1" 200 OK
+FluidSynth runtime version 2.3.4
+Copyright (C) 2000-2023 Peter Hanappe and others.
+Distributed under the LGPL license.
+SoundFont(R) is a registered trademark of Creative Technology Ltd.
+
+Rendering audio to file '/home/gyang197/project/ai-music/data/audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a_synth.wav'..
+INFO:     127.0.0.1:60146 - "POST /midi/80d0fd79-3fd0-4029-9f16-760b103f3b0a/synthesize?instrument=piano HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60146 - "GET /audio/80d0fd79-3fd0-4029-9f16-760b103f3b0a/waveform HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'frontend/api_client.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for connections to close. (CTRL+C to force quit)
