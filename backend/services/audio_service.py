@@ -27,3 +27,12 @@ def get_waveform_data(
 def convert_to_wav(src_path: Path, dest_path: Path) -> None:
     audio, sr = load_audio(src_path)
     save_audio(audio, sr, dest_path)
+
+
+def slice_audio(src_path: Path, dest_path: Path, start_sec: float, end_sec: float) -> None:
+    """Extract a time slice of an audio file."""
+    audio, sr = load_audio(src_path)
+    start_sample = int(start_sec * sr)
+    end_sample = int(end_sec * sr)
+    sliced = audio[start_sample:end_sample]
+    save_audio(sliced, sr, dest_path)

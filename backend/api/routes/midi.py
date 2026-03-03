@@ -3,8 +3,10 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from ...config import StaticConfig
-from ...models.schemas import Note
+from pydantic import BaseModel as _BaseModel
+from ...models.schemas import Note, NoteUpdate
 from ...repositories.file_repo import FileTrackRepository
+from ...services.edit_service import apply_pitch_shift_to_region, apply_timing_shift_to_region
 from ...services.midi_service import extract_midi, notes_to_midi, synthesize_midi
 
 router = APIRouter(prefix="/midi", tags=["midi"])
@@ -51,17 +53,42 @@ async def get_notes(track_id: str):
 
 
 @router.put("/{track_id}/notes/{note_id}")
-async def update_note(track_id: str, note_id: str, payload: dict):
+async def update_note(track_id: str, note_id: str, payload: NoteUpdate):
     path = _notes_path(track_id)
     if not path.exists():
         raise HTTPException(404, "MIDI not extracted yet")
+    updates = payload.model_dump(exclude_none=True)
+    if not updates:
+        raise HTTPException(400, "No fields to update")
     notes_data = json.loads(path.read_text())
     for note in notes_data:
         if note["id"] == note_id:
-            note.update({k: v for k, v in payload.items() if k in ("pitch_midi", "start_sec", "end_sec", "velocity")})
+            note.update(updates)
             path.write_text(json.dumps(notes_data))
             return note
     raise HTTPException(404, f"Note {note_id} not found")
+
+
+class RegionEditPayload(_BaseModel):
+    start_sec: float
+    end_sec: float
+    pitch_shift: int = 0
+    timing_shift: float = 0.0
+
+
+@router.put("/{track_id}/region")
+async def edit_region(track_id: str, payload: RegionEditPayload):
+    path = _notes_path(track_id)
+    if not path.exists():
+        raise HTTPException(404, "MIDI not extracted yet")
+    notes = [Note.model_validate(n) for n in json.loads(path.read_text())]
+    if payload.pitch_shift != 0:
+        notes = apply_pitch_shift_to_region(notes, payload.start_sec, payload.end_sec, payload.pitch_shift)
+    if payload.timing_shift != 0.0:
+        notes = apply_timing_shift_to_region(notes, payload.start_sec, payload.end_sec, payload.timing_shift)
+    notes_data = [n.model_dump(mode="json") for n in notes]
+    path.write_text(json.dumps(notes_data))
+    return {"notes": notes_data}
 
 
 @router.post("/{track_id}/synthesize")
@@ -77,7 +104,7 @@ async def synthesize(track_id: str, instrument: str = StaticConfig.DEFAULT_INSTR
     notes_to_midi(notes, midi_path, program=program)
     synth_path = _synth_path(track_id)
     synthesize_midi(midi_path, synth_path)
-    return {"playback_url": f"/audio/{track_id}/synth", "instrument": instrument}
+    return {"playback_url": f"/midi/{track_id}/playback", "instrument": instrument}
 
 
 @router.get("/{track_id}/playback")
