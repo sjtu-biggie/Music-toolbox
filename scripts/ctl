@@ -22,8 +22,8 @@ _start_frontend() {
     fi
     mkdir -p "$PROJECT_ROOT/logs"
     tmux new-session -ds "$FRONTEND_SESSION" \
-        "cd '$PROJECT_ROOT/frontend' && streamlit run app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true 2>&1 | tee '$PROJECT_ROOT/logs/frontend.log'"
-    echo "Frontend started → http://localhost:8501"
+        "cd '$PROJECT_ROOT/frontend' && npm run dev 2>&1 | tee '$PROJECT_ROOT/logs/frontend.log'"
+    echo "Frontend started → http://localhost:5173"
 }
 
 _stop() {
@@ -44,10 +44,11 @@ _test() {
     local mode="${1:-all}"
     cd "$PROJECT_ROOT"
     case "$mode" in
-        unit)        pytest tests/ -v -m "not integration" ;;
+        unit)        pytest tests/ -v -m "not integration" && (cd frontend && npm test) ;;
+        frontend)    cd frontend && npm test ;;
         integration) bash scripts/run_integration_test.sh ;;
         watch)       pytest-watch tests/ -- -v -m "not integration" ;;
-        *)           pytest tests/ -v -m "not integration" && bash scripts/run_integration_test.sh ;;
+        *)           pytest tests/ -v -m "not integration" && (cd frontend && npm test) && bash scripts/run_integration_test.sh ;;
     esac
 }
 

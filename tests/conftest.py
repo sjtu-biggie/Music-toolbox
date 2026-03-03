@@ -2,12 +2,21 @@ import sys
 from pathlib import Path as _Path
 from unittest.mock import MagicMock
 
-# Mock heavy deps incompatible with Python 3.12 at test time
+# Mock basic_pitch (ONNX model not available in CI/test)
 _bp_mock = MagicMock()
 _bp_mock.ICASSP_2022_MODEL_PATH = _Path("/mock/model")
 sys.modules.setdefault("basic_pitch", _bp_mock)
-sys.modules.setdefault("basic_pitch.inference", MagicMock(predict=MagicMock()))
-sys.modules.setdefault("midi2audio", MagicMock())
+
+# predict() must return a 3-tuple: (model_output, midi_data, note_events)
+import pretty_midi as _pm
+_dummy_midi = _pm.PrettyMIDI(initial_tempo=120.0)
+_inst = _pm.Instrument(program=0)
+_inst.notes.append(_pm.Note(velocity=80, pitch=60, start=0.0, end=0.5))
+_dummy_midi.instruments.append(_inst)
+sys.modules.setdefault(
+    "basic_pitch.inference",
+    MagicMock(predict=MagicMock(return_value=(None, _dummy_midi, None))),
+)
 
 import numpy as np
 import soundfile as sf

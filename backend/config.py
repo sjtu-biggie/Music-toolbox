@@ -4,7 +4,7 @@ from pathlib import Path
 class StaticConfig:
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
-    FRONTEND_PORT: int = 8501
+    FRONTEND_PORT: int = 5173
 
     BASE_DIR: Path = Path(__file__).parent.parent
     DATA_DIR: Path = BASE_DIR / "data"
