@@ -83,6 +83,21 @@ export async function getWaveform(trackId: string): Promise<WaveformData> {
   return request(`/audio/${trackId}/waveform`);
 }
 
+export async function createNote(
+  trackId: string,
+  note: { pitch_midi: number; start_sec: number; end_sec: number; velocity?: number }
+): Promise<Note> {
+  return request(`/midi/${trackId}/notes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(note),
+  });
+}
+
+export async function deleteNote(trackId: string, noteId: string): Promise<{ deleted: string }> {
+  return request(`/midi/${trackId}/notes/${noteId}`, { method: "DELETE" });
+}
+
 export async function editRegion(
   trackId: string,
   startSec: number,

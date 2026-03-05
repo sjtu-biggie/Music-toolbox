@@ -215,6 +215,72 @@ async def test_region_pitch_shift(client, wav_bytes):
 
 
 @pytest.mark.anyio
+async def test_create_note(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "Create Note Test"},
+    )
+    tid = upload.json()["track_id"]
+    await client.post(f"/midi/{tid}/extract")
+
+    resp = await client.post(f"/midi/{tid}/notes", json={
+        "pitch_midi": 60, "start_sec": 0.5, "end_sec": 0.75,
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["pitch_midi"] == 60
+    assert "id" in data
+
+    # Verify it's persisted
+    notes_resp = await client.get(f"/midi/{tid}")
+    ids = [n["id"] for n in notes_resp.json()["notes"]]
+    assert data["id"] in ids
+
+
+@pytest.mark.anyio
+async def test_delete_note(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "Delete Note Test"},
+    )
+    tid = upload.json()["track_id"]
+    await client.post(f"/midi/{tid}/extract")
+
+    notes = (await client.get(f"/midi/{tid}")).json()["notes"]
+    if not notes:
+        # Create one to delete
+        resp = await client.post(f"/midi/{tid}/notes", json={
+            "pitch_midi": 60, "start_sec": 0.0, "end_sec": 0.5,
+        })
+        note_id = resp.json()["id"]
+    else:
+        note_id = notes[0]["id"]
+
+    resp = await client.delete(f"/midi/{tid}/notes/{note_id}")
+    assert resp.status_code == 200
+    assert resp.json()["deleted"] == note_id
+
+    # Verify it's gone
+    notes_after = (await client.get(f"/midi/{tid}")).json()["notes"]
+    assert note_id not in [n["id"] for n in notes_after]
+
+
+@pytest.mark.anyio
+async def test_delete_note_not_found(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "Delete 404 Test"},
+    )
+    tid = upload.json()["track_id"]
+    await client.post(f"/midi/{tid}/extract")
+    resp = await client.delete(f"/midi/{tid}/notes/nonexistent-id")
+    assert resp.status_code == 404
+
+
+@pytest.mark.anyio
 async def test_region_playback_streams_audio(client, wav_bytes):
     upload = await client.post(
         "/audio/upload",

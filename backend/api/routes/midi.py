@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
+from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel as _BaseModel, Field
 from ...config import StaticConfig
-from pydantic import BaseModel as _BaseModel
 from ...models.schemas import Note, NoteUpdate
 from ...repositories.file_repo import FileTrackRepository
 from ...services.edit_service import apply_pitch_shift_to_region, apply_timing_shift_to_region
@@ -35,7 +36,6 @@ async def extract(track_id: str):
     wav_path = StaticConfig.AUDIO_DIR / f"{track_id}.wav"
     if not wav_path.exists():
         raise HTTPException(404, "Track not found")
-    from uuid import UUID
     midi_path = _midi_path(track_id)
     StaticConfig.MIDI_DIR.mkdir(parents=True, exist_ok=True)
     notes = extract_midi(wav_path, midi_path, track_id=UUID(track_id))
@@ -67,6 +67,44 @@ async def update_note(track_id: str, note_id: str, payload: NoteUpdate):
             path.write_text(json.dumps(notes_data))
             return note
     raise HTTPException(404, f"Note {note_id} not found")
+
+
+class NoteCreatePayload(_BaseModel):
+    pitch_midi: int = Field(ge=0, le=127)
+    start_sec: float = Field(ge=0)
+    end_sec: float = Field(ge=0)
+    velocity: int = Field(default=80, ge=0, le=127)
+
+
+@router.post("/{track_id}/notes")
+async def create_note(track_id: str, payload: NoteCreatePayload):
+    path = _notes_path(track_id)
+    if not path.exists():
+        raise HTTPException(404, "MIDI not extracted yet")
+    note = Note(
+        track_id=UUID(track_id),
+        pitch_midi=payload.pitch_midi,
+        start_sec=payload.start_sec,
+        end_sec=payload.end_sec,
+        velocity=payload.velocity,
+    )
+    notes_data = json.loads(path.read_text())
+    notes_data.append(note.model_dump(mode="json"))
+    path.write_text(json.dumps(notes_data))
+    return note.model_dump(mode="json")
+
+
+@router.delete("/{track_id}/notes/{note_id}")
+async def delete_note(track_id: str, note_id: str):
+    path = _notes_path(track_id)
+    if not path.exists():
+        raise HTTPException(404, "MIDI not extracted yet")
+    notes_data = json.loads(path.read_text())
+    new_notes = [n for n in notes_data if n["id"] != note_id]
+    if len(new_notes) == len(notes_data):
+        raise HTTPException(404, f"Note {note_id} not found")
+    path.write_text(json.dumps(new_notes))
+    return {"deleted": note_id}
 
 
 class RegionEditPayload(_BaseModel):

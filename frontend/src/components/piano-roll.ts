@@ -1,11 +1,13 @@
 import { defaultViewport, darkTheme, midiToNoteName, isBlackKey } from "../lib/canvas-utils";
 import type { Viewport, PianoRollTheme } from "../lib/canvas-utils";
-import { updateNote } from "../api";
+import { updateNote, createNote, deleteNote } from "../api";
 import type { Note } from "../api";
 
 const KEY_LABEL_WIDTH = 48;
-const NOTE_HEIGHT_PX = 16;
+const NOTE_HEIGHT_PX = 12;
 const MIN_NOTE_WIDTH_PX = 4;
+const CLICK_THRESHOLD_PX = 5;
+const DEFAULT_NOTE_DURATION = 0.25;
 
 interface DragState {
   type: "move" | "resize-left" | "resize-right";
@@ -68,6 +70,7 @@ export class PianoRoll {
     this.canvas.addEventListener("mousemove", (e) => this.onMouseMove(e));
     this.canvas.addEventListener("mouseup", (e) => this.onMouseUp(e));
     this.canvas.addEventListener("wheel", (e) => this.onWheel(e), { passive: false });
+    this.canvas.addEventListener("contextmenu", (e) => this.onContextMenu(e));
 
     this.render();
   }
@@ -271,7 +274,7 @@ export class PianoRoll {
     }
   }
 
-  private async onMouseUp(_e: MouseEvent) {
+  private async onMouseUp(e: MouseEvent) {
     if (this.drag) {
       const note = this.notes.find((n) => n.id === this.drag!.noteId);
       if (note) {
@@ -290,11 +293,87 @@ export class PianoRoll {
     }
 
     if (this.regionDrag) {
+      const dx = Math.abs(this.regionDrag.currentX - this.regionDrag.startX);
+      if (dx < CLICK_THRESHOLD_PX) {
+        // Click (not drag) on blank area — create a new note
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const pitch = this.yToPitch(y);
+        const time = this.xToTime(x);
+        this.region = null;
+        this.regionDrag = null;
+        try {
+          const note = await createNote(this.trackId, {
+            pitch_midi: Math.max(0, Math.min(127, pitch)),
+            start_sec: Math.max(0, time),
+            end_sec: Math.max(0, time) + DEFAULT_NOTE_DURATION,
+          });
+          this.notes.push(note);
+          this.selectedNoteIds = new Set([note.id]);
+          this.onNotesChange(this.notes);
+          this.render();
+        } catch (err) {
+          console.error("Failed to create note:", err);
+        }
+        return;
+      }
       this.regionDrag = null;
       if (this.region) {
         this.onRegionChange(this.region);
       }
     }
+  }
+
+  private onContextMenu(e: MouseEvent) {
+    e.preventDefault();
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const hit = this.noteAt(x, y);
+    if (!hit) return;
+
+    // Remove any existing context menu
+    document.querySelector(".piano-roll-ctx-menu")?.remove();
+
+    const menu = document.createElement("div");
+    menu.className = "piano-roll-ctx-menu";
+    menu.style.cssText = `
+      position: fixed; left: ${e.clientX}px; top: ${e.clientY}px;
+      background: #1a1a2e; border: 1px solid #3a3a5a; border-radius: 4px;
+      padding: 4px 0; z-index: 9999; min-width: 100px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    `;
+    const deleteBtn = document.createElement("div");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.style.cssText = `
+      padding: 6px 16px; cursor: pointer; color: #e94560;
+      font-size: 13px;
+    `;
+    deleteBtn.addEventListener("mouseenter", () => { deleteBtn.style.background = "#2a2a4a"; });
+    deleteBtn.addEventListener("mouseleave", () => { deleteBtn.style.background = ""; });
+    deleteBtn.addEventListener("click", async () => {
+      menu.remove();
+      try {
+        await deleteNote(this.trackId, hit.note.id);
+        this.notes = this.notes.filter((n) => n.id !== hit.note.id);
+        this.selectedNoteIds.delete(hit.note.id);
+        this.onNotesChange(this.notes);
+        this.render();
+      } catch (err) {
+        console.error("Failed to delete note:", err);
+      }
+    });
+    menu.appendChild(deleteBtn);
+    document.body.appendChild(menu);
+
+    const dismiss = (ev: MouseEvent) => {
+      if (!menu.contains(ev.target as Node)) {
+        menu.remove();
+        document.removeEventListener("mousedown", dismiss);
+      }
+    };
+    document.addEventListener("mousedown", dismiss);
   }
 
   private onWheel(e: WheelEvent) {
