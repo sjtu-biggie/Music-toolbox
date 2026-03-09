@@ -31,3 +31,12 @@ def test_convert_to_wav(sample_wav_path, tmp_path):
     assert dest.stat().st_size > 0
     _, sr = sf.read(str(dest))
     assert sr == StaticConfig.INTERNAL_SAMPLE_RATE
+
+
+def test_slice_audio_correct_duration(sample_wav_path, tmp_path):
+    from backend.services.audio_service import slice_audio
+    out = tmp_path / "slice.wav"
+    slice_audio(sample_wav_path, out, start_sec=0.5, end_sec=1.5)
+    audio, sr = load_audio(out)
+    duration = len(audio) / sr
+    assert abs(duration - 1.0) < 0.05  # within 50ms
