@@ -10,6 +10,7 @@ export interface ToolbarCallbacks {
   onSourceChange: (source: AudioSource) => void;
   onInstrumentChange: (instrument: string) => void;
   onTrackChange: (trackId: string) => void;
+  onAI?: () => void;
 }
 
 export interface ToolbarOptions {
@@ -83,6 +84,10 @@ export function renderToolbar(
           <button class="btn-action" id="tb-extract">Extract MIDI</button>
           <button class="btn-action primary" id="tb-synth">Synthesize</button>
         </div>
+        <div class="control-divider"></div>
+        <div class="control-group">
+          <button class="btn-action" id="tb-ai" title="Toggle AI Modification Panel">AI Modify</button>
+        </div>
       </div>
     </div>
   `;
@@ -110,6 +115,10 @@ export function renderToolbar(
 
   container.querySelector("#tb-instrument")!.addEventListener("change", (e) => {
     callbacks.onInstrumentChange((e.target as HTMLSelectElement).value);
+  });
+
+  container.querySelector("#tb-ai")!.addEventListener("click", () => {
+    callbacks.onAI?.();
   });
 
   // Return control API

@@ -45,6 +45,7 @@ class AIJob(BaseModel):
     end_sec: float
     status: Literal["pending", "running", "done", "failed"] = "pending"
     result_path: str | None = None
+    spliced_track_id: str | None = None
     error_msg: str | None = None
     created_at: datetime = Field(default_factory=_now)
     updated_at: datetime = Field(default_factory=_now)

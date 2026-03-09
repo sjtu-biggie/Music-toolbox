@@ -53,6 +53,7 @@ export function renderEditorView(container: HTMLElement) {
         <div id="piano-roll-container"></div>
       </div>
     </div>
+    <div id="ai-panel-mount" class="hidden"></div>
     <div class="status-bar">
       <span class="status-segment status-message" id="status-msg">Ready</span>
       <span class="status-segment" id="status-region">&mdash;</span>
@@ -99,9 +100,34 @@ export function renderEditorView(container: HTMLElement) {
           setState({ activeTrackId: newTrackId });
           renderEditorView(container);
         },
+        onAI: handleAIToggle,
       },
     );
   });
+
+  // AI Panel
+  let aiPanelCleanup: (() => void) | null = null;
+
+  function handleAIToggle() {
+    const mount = document.getElementById("ai-panel-mount")!;
+    if (mount.classList.contains("hidden")) {
+      mount.classList.remove("hidden");
+      import("./ai-panel").then(({ renderAIPanel }) => {
+        aiPanelCleanup = renderAIPanel(mount, {
+          trackId,
+          getRegion: () => currentRegion,
+          onTrackCreated: () => {
+            renderEditorView(container);
+          },
+        });
+      });
+    } else {
+      mount.classList.add("hidden");
+      mount.innerHTML = "";
+      aiPanelCleanup?.();
+      aiPanelCleanup = null;
+    }
+  }
 
   // WaveSurfer
   const regions = RegionsPlugin.create();
