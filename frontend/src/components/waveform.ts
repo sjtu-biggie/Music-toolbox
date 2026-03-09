@@ -1,6 +1,12 @@
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions";
-import { getState } from "../state";
+import { getState, setState } from "../state";
+
+function escapeHtml(s: string): string {
+  const el = document.createElement("span");
+  el.textContent = s;
+  return el.innerHTML;
+}
 import {
   extractMidi,
   getNotes,
@@ -40,7 +46,7 @@ export function renderEditorView(container: HTMLElement) {
       <select id="track-select">
         ${tracks.map((t) =>
           `<option value="${t.track_id}" ${t.track_id === trackId ? "selected" : ""}>
-            ${t.name} (${t.duration_sec.toFixed(1)}s)
+            ${escapeHtml(t.name)} (${t.duration_sec.toFixed(1)}s)
           </option>`
         ).join("")}
       </select>
@@ -74,7 +80,7 @@ export function renderEditorView(container: HTMLElement) {
     instrumentSelect.innerHTML = data.instruments
       .map(
         (inst) =>
-          `<option value="${inst}" ${inst === data.default ? "selected" : ""}>${inst}</option>`
+          `<option value="${escapeHtml(inst)}" ${inst === data.default ? "selected" : ""}>${escapeHtml(inst)}</option>`
       )
       .join("");
   });
@@ -167,10 +173,8 @@ export function renderEditorView(container: HTMLElement) {
     const { tracks: currentTracks } = getState();
     const newState: Record<string, unknown> = { activeTrackId: select.value };
     newState.tracks = currentTracks;
-    import("../state").then(({ setState }) => {
-      setState({ activeTrackId: select.value });
-      renderEditorView(container);
-    });
+    setState({ activeTrackId: select.value });
+    renderEditorView(container);
   });
 
   function mountPianoRoll(notes: Note[]) {
@@ -200,14 +204,6 @@ export function renderEditorView(container: HTMLElement) {
           });
           statusBar.textContent = `Region: ${region.startSec.toFixed(2)}s — ${region.endSec.toFixed(2)}s`;
         }
-      },
-      onRequestSynthesize: async () => {
-        const instrument = instrumentSelect.value;
-        statusBar.textContent = `Synthesizing with ${instrument}...`;
-        const result = await synthesize(trackId, instrument);
-        ws.load(result.playback_url);
-        notesModified = false;
-        statusBar.textContent = `Synthesized with ${result.instrument}.`;
       },
     });
   }

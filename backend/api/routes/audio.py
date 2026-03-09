@@ -97,11 +97,18 @@ async def get_playback(track_id: str):
     wav_path = StaticConfig.AUDIO_DIR / f"{track_id}.wav"
     if not wav_path.exists():
         raise HTTPException(404, "Track not found")
-    return StreamingResponse(open(wav_path, "rb"), media_type="audio/wav")
+
+    def iter_file():
+        with open(wav_path, "rb") as f:
+            yield from f
+
+    return StreamingResponse(iter_file(), media_type="audio/wav")
 
 
 @router.get("/{track_id}/region")
 async def get_region(track_id: str, start_sec: float = 0.0, end_sec: float = 10.0):
+    if start_sec < 0 or end_sec <= start_sec:
+        raise HTTPException(400, "Invalid region bounds: start must be >= 0 and end must be > start")
     wav_path = StaticConfig.AUDIO_DIR / f"{track_id}.wav"
     if not wav_path.exists():
         raise HTTPException(404, "Track not found")

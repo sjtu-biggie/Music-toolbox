@@ -30,7 +30,6 @@ export interface PianoRollOptions {
   durationSec: number;
   onNotesChange: (notes: Note[]) => void;
   onRegionChange: (region: { startSec: number; endSec: number } | null) => void;
-  onRequestSynthesize: () => void;
 }
 
 export class PianoRoll {
@@ -48,6 +47,7 @@ export class PianoRoll {
   private onNotesChange: (notes: Note[]) => void;
   private onRegionChange: (region: { startSec: number; endSec: number } | null) => void;
   private resizeHandler: () => void;
+  private dismissHandler: ((ev: MouseEvent) => void) | null = null;
 
   constructor(container: HTMLElement, options: PianoRollOptions) {
     this.trackId = options.trackId;
@@ -146,12 +146,13 @@ export class PianoRoll {
     for (let t = Math.floor(startTime); t <= Math.ceil(endTime); t += 0.25) {
       const x = this.timeToX(t);
       if (x < KEY_LABEL_WIDTH) continue;
-      ctx.strokeStyle = t % 1 === 0 ? this.theme.gridLineBeat : this.theme.gridLine;
+      const isBeat = Math.abs(t - Math.round(t)) < 0.001;
+      ctx.strokeStyle = isBeat ? this.theme.gridLineBeat : this.theme.gridLine;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, h);
       ctx.stroke();
-      if (t % 1 === 0) {
+      if (isBeat) {
         ctx.fillStyle = this.theme.textColor;
         ctx.font = "10px sans-serif";
         ctx.fillText(`${t}s`, x + 2, h - 4);
@@ -367,13 +368,14 @@ export class PianoRoll {
     menu.appendChild(deleteBtn);
     document.body.appendChild(menu);
 
-    const dismiss = (ev: MouseEvent) => {
+    this.dismissHandler = (ev: MouseEvent) => {
       if (!menu.contains(ev.target as Node)) {
         menu.remove();
-        document.removeEventListener("mousedown", dismiss);
+        document.removeEventListener("mousedown", this.dismissHandler!);
+        this.dismissHandler = null;
       }
     };
-    document.addEventListener("mousedown", dismiss);
+    document.addEventListener("mousedown", this.dismissHandler);
   }
 
   private onWheel(e: WheelEvent) {
@@ -394,6 +396,11 @@ export class PianoRoll {
 
   destroy() {
     window.removeEventListener("resize", this.resizeHandler);
+    if (this.dismissHandler) {
+      document.removeEventListener("mousedown", this.dismissHandler);
+      this.dismissHandler = null;
+    }
+    document.querySelector(".piano-roll-ctx-menu")?.remove();
     this.canvas.remove();
   }
 }
