@@ -20,6 +20,15 @@ class StaticConfig:
     WAVEFORM_MAX_POINTS: int = 1000
     AI_CONTEXT_SECONDS: float = 10.0
 
+    # MIDI extraction tuning
+    MIDI_ONSET_THRESHOLD: float = 0.6
+    MIDI_FRAME_THRESHOLD: float = 0.4
+    MIDI_MIN_NOTE_LENGTH_MS: float = 200.0
+    MIDI_MIN_FREQUENCY: float = 80.0
+    MIDI_MAX_FREQUENCY: float = 1000.0
+    MERGE_GAP_SEC: float = 0.15
+    MIN_NOTE_SEC: float = 0.08
+
     REPLICATE_API_TOKEN: str = ""
 
     # General MIDI program numbers for available instruments

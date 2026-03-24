@@ -45,9 +45,10 @@ export function renderUpload(container: HTMLElement) {
     uploadBtn.disabled = true;
     status.textContent = "Uploading...";
     try {
-      const result = await uploadTrack(file);
+      const result = await uploadTrack(file, file.name);
       const tracks = [...getState().tracks, {
         track_id: result.track_id,
+        name: result.name,
         filename: file.name,
         duration_sec: result.duration_sec,
       }];

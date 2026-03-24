@@ -4,7 +4,7 @@ from backend.models.schemas import Track, Note, AIJob
 
 
 def test_track_has_uuid_and_timestamps():
-    track = Track(filename="song.mp3", duration_sec=3.0, sample_rate=22050, status="ready")
+    track = Track(name="Test Song", filename="song.mp3", duration_sec=3.0, sample_rate=22050, status="ready")
     assert isinstance(track.id, UUID)
     assert isinstance(track.created_at, datetime)
     assert isinstance(track.updated_at, datetime)

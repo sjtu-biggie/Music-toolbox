@@ -17,7 +17,7 @@ def setup_dirs(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_save_and_get_track():
     repo = FileTrackRepository()
-    track = Track(filename="song.mp3", duration_sec=3.0, sample_rate=22050, status="ready")
+    track = Track(name="Test Song", filename="song.mp3", duration_sec=3.0, sample_rate=22050, status="ready")
     await repo.save(track)
     loaded = await repo.get(track.id)
     assert loaded.id == track.id

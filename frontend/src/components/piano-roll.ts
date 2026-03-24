@@ -8,6 +8,7 @@ const NOTE_HEIGHT_PX = 12;
 const MIN_NOTE_WIDTH_PX = 4;
 const CLICK_THRESHOLD_PX = 5;
 const DEFAULT_NOTE_DURATION = 0.25;
+const SCROLLBAR_HEIGHT = 14;
 
 interface DragState {
   type: "move" | "resize-left" | "resize-right";
@@ -48,6 +49,8 @@ export class PianoRoll {
   private onRegionChange: (region: { startSec: number; endSec: number } | null) => void;
   private resizeHandler: () => void;
   private dismissHandler: ((ev: MouseEvent) => void) | null = null;
+  private panState: { lastX: number; lastY: number } | null = null;
+  private scrollbarDrag: boolean = false;
 
   constructor(container: HTMLElement, options: PianoRollOptions) {
     this.trackId = options.trackId;
@@ -89,8 +92,8 @@ export class PianoRoll {
     const rect = this.canvas.parentElement!.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = rect.width * dpr;
-    this.canvas.height = (this.viewport.visiblePitchRange * NOTE_HEIGHT_PX) * dpr;
-    this.canvas.style.height = `${this.viewport.visiblePitchRange * NOTE_HEIGHT_PX}px`;
+    this.canvas.height = (this.viewport.visiblePitchRange * NOTE_HEIGHT_PX + SCROLLBAR_HEIGHT) * dpr;
+    this.canvas.style.height = `${this.viewport.visiblePitchRange * NOTE_HEIGHT_PX + SCROLLBAR_HEIGHT}px`;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.render();
   }
@@ -119,6 +122,10 @@ export class PianoRoll {
   private yToPitch(y: number): number {
     const topPitch = this.viewport.scrollY + this.viewport.visiblePitchRange;
     return topPitch - Math.floor(y / NOTE_HEIGHT_PX) - 1;
+  }
+
+  private maxScrollX(): number {
+    return Math.max(0, this.durationSec - (this.canvasWidth - KEY_LABEL_WIDTH) * this.viewport.secPerPx);
   }
 
   private render() {
@@ -155,7 +162,7 @@ export class PianoRoll {
       if (isBeat) {
         ctx.fillStyle = this.theme.textColor;
         ctx.font = "10px sans-serif";
-        ctx.fillText(`${t}s`, x + 2, h - 4);
+        ctx.fillText(`${t}s`, x + 2, h - SCROLLBAR_HEIGHT - 2);
       }
     }
 
@@ -186,9 +193,28 @@ export class PianoRoll {
       ctx.font = "10px monospace";
       ctx.fillText(midiToNoteName(p), 4, y + NOTE_HEIGHT_PX - 4);
     }
+
+    // Scrollbar
+    const scrollbarY = h - SCROLLBAR_HEIGHT;
+    const trackWidth = w - KEY_LABEL_WIDTH;
+    ctx.fillStyle = this.theme.scrollbarTrack;
+    ctx.fillRect(KEY_LABEL_WIDTH, scrollbarY, trackWidth, SCROLLBAR_HEIGHT);
+    if (this.durationSec > 0) {
+      const visibleDuration = trackWidth * this.viewport.secPerPx;
+      const thumbRatio = Math.min(1, visibleDuration / this.durationSec);
+      const thumbWidth = Math.max(20, trackWidth * thumbRatio);
+      const maxScroll = this.maxScrollX();
+      const scrollRatio = maxScroll > 0 ? this.viewport.scrollX / maxScroll : 0;
+      const thumbX = KEY_LABEL_WIDTH + scrollRatio * (trackWidth - thumbWidth);
+      ctx.fillStyle = this.theme.scrollbarThumb;
+      ctx.beginPath();
+      ctx.roundRect(thumbX, scrollbarY + 2, thumbWidth, SCROLLBAR_HEIGHT - 4, 3);
+      ctx.fill();
+    }
   }
 
   private noteAt(x: number, y: number): { note: Note; edge: "left" | "right" | "body" } | null {
+    if (y >= this.canvasHeight - SCROLLBAR_HEIGHT) return null;
     const time = this.xToTime(x);
     const pitch = this.yToPitch(y);
     const edgeThresholdSec = this.viewport.secPerPx * 6;
@@ -207,6 +233,25 @@ export class PianoRoll {
     const rect = this.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    // Middle-click pan
+    if (e.button === 1) {
+      e.preventDefault();
+      this.panState = { lastX: e.clientX, lastY: e.clientY };
+      this.canvas.style.cursor = "grabbing";
+      return;
+    }
+
+    // Scrollbar click
+    if (y >= this.canvasHeight - SCROLLBAR_HEIGHT && x >= KEY_LABEL_WIDTH) {
+      this.scrollbarDrag = true;
+      const trackWidth = this.canvasWidth - KEY_LABEL_WIDTH;
+      const visibleDuration = trackWidth * this.viewport.secPerPx;
+      const ratio = (x - KEY_LABEL_WIDTH) / trackWidth;
+      this.viewport.scrollX = Math.max(0, Math.min(this.maxScrollX(), ratio * this.durationSec - visibleDuration / 2));
+      this.render();
+      return;
+    }
 
     if (x < KEY_LABEL_WIDTH) return;
 
@@ -237,6 +282,29 @@ export class PianoRoll {
     const rect = this.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    // Pan state
+    if (this.panState) {
+      const dx = e.clientX - this.panState.lastX;
+      const dy = e.clientY - this.panState.lastY;
+      this.viewport.scrollX -= dx * this.viewport.secPerPx;
+      this.viewport.scrollX = Math.max(0, Math.min(this.maxScrollX(), this.viewport.scrollX));
+      this.viewport.scrollY -= Math.round(dy / NOTE_HEIGHT_PX);
+      this.viewport.scrollY = Math.max(0, Math.min(108, this.viewport.scrollY));
+      this.panState = { lastX: e.clientX, lastY: e.clientY };
+      this.render();
+      return;
+    }
+
+    // Scrollbar drag
+    if (this.scrollbarDrag) {
+      const trackWidth = this.canvasWidth - KEY_LABEL_WIDTH;
+      const visibleDuration = trackWidth * this.viewport.secPerPx;
+      const ratio = (x - KEY_LABEL_WIDTH) / trackWidth;
+      this.viewport.scrollX = Math.max(0, Math.min(this.maxScrollX(), ratio * this.durationSec - visibleDuration / 2));
+      this.render();
+      return;
+    }
 
     if (this.drag) {
       const note = this.notes.find((n) => n.id === this.drag!.noteId);
@@ -276,6 +344,16 @@ export class PianoRoll {
   }
 
   private async onMouseUp(e: MouseEvent) {
+    if (this.panState) {
+      this.panState = null;
+      this.canvas.style.cursor = "default";
+      return;
+    }
+    if (this.scrollbarDrag) {
+      this.scrollbarDrag = false;
+      return;
+    }
+
     if (this.drag) {
       const note = this.notes.find((n) => n.id === this.drag!.noteId);
       if (note) {
@@ -380,9 +458,14 @@ export class PianoRoll {
 
   private onWheel(e: WheelEvent) {
     e.preventDefault();
+    // Trackpad horizontal swipe
+    if (e.deltaX !== 0) {
+      this.viewport.scrollX += e.deltaX * this.viewport.secPerPx * 2;
+      this.viewport.scrollX = Math.max(0, Math.min(this.maxScrollX(), this.viewport.scrollX));
+    }
     if (e.shiftKey) {
       this.viewport.scrollX += e.deltaY * this.viewport.secPerPx * 2;
-      this.viewport.scrollX = Math.max(0, this.viewport.scrollX);
+      this.viewport.scrollX = Math.max(0, Math.min(this.maxScrollX(), this.viewport.scrollX));
     } else if (e.ctrlKey || e.metaKey) {
       const factor = e.deltaY > 0 ? 1.1 : 0.9;
       this.viewport.secPerPx *= factor;

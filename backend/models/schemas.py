@@ -10,6 +10,7 @@ def _now() -> datetime:
 
 class Track(BaseModel):
     id: UUID = Field(default_factory=uuid4)
+    name: str
     filename: str
     duration_sec: float
     sample_rate: int
@@ -25,6 +26,13 @@ class Note(BaseModel):
     start_sec: float
     end_sec: float
     velocity: int     # 0-127
+
+
+class NoteUpdate(BaseModel):
+    pitch_midi: int | None = None
+    start_sec: float | None = None
+    end_sec: float | None = None
+    velocity: int | None = None
 
 
 class AIJob(BaseModel):
