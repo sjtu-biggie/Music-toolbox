@@ -65,6 +65,8 @@ export function renderAIPanel(container: HTMLElement, options: AIPanelOptions) {
   let selectedMode: "style" | "melody" | "accompaniment" = "style";
   let currentJobId: string | null = null;
   let pollTimer: number | null = null;
+  let origWs: WaveSurfer | null = null;
+  let modWs: WaveSurfer | null = null;
 
   // Mode buttons
   container.querySelectorAll<HTMLButtonElement>(".ai-mode").forEach((btn) => {
@@ -141,13 +143,21 @@ export function renderAIPanel(container: HTMLElement, options: AIPanelOptions) {
     }
   });
 
+  function destroyPlayers() {
+    origWs?.destroy();
+    origWs = null;
+    modWs?.destroy();
+    modWs = null;
+  }
+
   function showResult(region: { startSec: number; endSec: number }) {
+    destroyPlayers();
     const resultDiv = document.getElementById("ai-result")!;
     resultDiv.classList.remove("hidden");
 
     const origContainer = document.getElementById("ai-waveform-original")!;
     origContainer.innerHTML = "";
-    WaveSurfer.create({
+    origWs = WaveSurfer.create({
       container: origContainer,
       waveColor: "#4a4a6a",
       progressColor: "#4caf50",
@@ -157,7 +167,7 @@ export function renderAIPanel(container: HTMLElement, options: AIPanelOptions) {
 
     const modContainer = document.getElementById("ai-waveform-modified")!;
     modContainer.innerHTML = "";
-    WaveSurfer.create({
+    modWs = WaveSurfer.create({
       container: modContainer,
       waveColor: "#4a4a6a",
       progressColor: "#e94560",
@@ -198,5 +208,6 @@ export function renderAIPanel(container: HTMLElement, options: AIPanelOptions) {
   return () => {
     if (pollTimer) clearInterval(pollTimer);
     clearInterval(regionCheckTimer);
+    destroyPlayers();
   };
 }

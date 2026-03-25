@@ -22,7 +22,7 @@ def _download_bytes(url: str) -> bytes:
 
 
 class ReplicateProvider(AIProvider):
-    async def modify(
+    def modify(
         self,
         segment_audio: bytes,
         segment_duration_sec: float,

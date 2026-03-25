@@ -1,7 +1,6 @@
 import io
 import numpy as np
 import soundfile as sf
-import pytest
 from unittest.mock import patch, MagicMock
 from backend.config import StaticConfig
 
@@ -17,20 +16,16 @@ def _make_wav(duration_sec: float, sr: int = SR) -> bytes:
     return buf.getvalue()
 
 
-@pytest.mark.asyncio
-async def test_musicgen_provider_returns_wav_at_internal_rate():
+def test_musicgen_provider_returns_wav_at_internal_rate():
     from backend.providers.musicgen import MusicGenProvider
 
     fake_audio_32k = np.zeros(int(MODEL_SR * 5), dtype=np.float32)
-    # model.generate() returns shape (batch, channels, samples)
-    # code does audio_values[0] -> shape (channels, samples), then .cpu().numpy()
     fake_output = MagicMock()
     fake_single = MagicMock()
-    fake_single.cpu.return_value.numpy.return_value = fake_audio_32k[np.newaxis, :]  # (1, samples)
+    fake_single.cpu.return_value.numpy.return_value = fake_audio_32k[np.newaxis, :]
     fake_output.__getitem__ = MagicMock(return_value=fake_single)
     fake_tensor = fake_output
 
-    # Create a mock torch module with Tensor type and no_grad context manager
     mock_torch = MagicMock()
     mock_torch.Tensor = type("FakeTensor", (), {})
     mock_torch.no_grad.return_value.__enter__ = MagicMock()
@@ -46,7 +41,7 @@ async def test_musicgen_provider_returns_wav_at_internal_rate():
         mock_load.return_value = (mock_processor, mock_model)
 
         provider = MusicGenProvider()
-        result = await provider.modify(
+        result = provider.modify(
             segment_audio=_make_wav(5.0),
             segment_duration_sec=5.0,
             mode="style",
@@ -59,8 +54,7 @@ async def test_musicgen_provider_returns_wav_at_internal_rate():
     assert len(audio) > 0
 
 
-@pytest.mark.asyncio
-async def test_musicgen_provider_satisfies_abc():
+def test_musicgen_provider_satisfies_abc():
     from backend.providers.musicgen import MusicGenProvider
     from backend.providers.base import AIProvider
     assert issubclass(MusicGenProvider, AIProvider)

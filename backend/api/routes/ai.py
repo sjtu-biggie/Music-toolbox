@@ -12,10 +12,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 from typing import Literal
-import asyncio
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from ...config import StaticConfig
 from ...models.schemas import AIJob, Track
 from ...services.ai_service import dispatch, splice_segment, get_provider
@@ -36,9 +35,9 @@ def _validate_uuid(value: str, label: str = "ID") -> str:
 
 class ModifyRequest(BaseModel):
     mode: Literal["style", "melody", "accompaniment"]
-    prompt: str
-    start_sec: float
-    end_sec: float
+    prompt: str = Field(..., max_length=500)
+    start_sec: float = Field(..., ge=0)
+    end_sec: float = Field(..., ge=0)
     provider: Literal["local", "replicate"] = "local"
 
     @model_validator(mode="after")
@@ -70,9 +69,7 @@ def _run_job_sync(job: AIJob, wav_path: Path) -> None:
         job_path.write_text(job.model_dump_json())
 
         provider = get_provider(job.provider)
-        # provider.modify is async per ABC but does blocking work internally;
-        # run it via asyncio.run() in this worker thread
-        coro = dispatch(
+        result_bytes = dispatch(
             provider=provider,
             wav_path=wav_path,
             start_sec=job.start_sec,
@@ -80,7 +77,6 @@ def _run_job_sync(job: AIJob, wav_path: Path) -> None:
             mode=job.mode,
             prompt=job.prompt,
         )
-        result_bytes = asyncio.run(coro)
         _result_path(str(job.id)).write_bytes(result_bytes)
         job.status = "done"
         job.result_path = str(_result_path(str(job.id)))
@@ -126,7 +122,7 @@ async def get_job(job_id: str):
     path = _job_path(job_id)
     if not path.exists():
         raise HTTPException(404, detail=f"Job not found: {job_id}")
-    return AIJob.model_validate_json(path.read_text()).model_dump(mode="json")
+    return AIJob.model_validate_json(path.read_text()).model_dump(mode="json", exclude={"result_path"})
 
 
 @router.get("/jobs/{job_id}/result")
@@ -179,6 +175,8 @@ async def splice(track_id: str, req: SpliceRequest):
         raise HTTPException(404, detail=f"Job not found: {safe_job_id}")
 
     job = AIJob.model_validate_json(job_path.read_text())
+    if str(job.track_id) != track_id:
+        raise HTTPException(400, detail="Job does not belong to this track")
     if job.status != "done":
         raise HTTPException(409, detail=f"Job not done (status='{job.status}'). Wait for completion.")
 

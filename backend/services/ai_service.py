@@ -143,7 +143,7 @@ def get_provider(name: Literal["local", "replicate"]) -> AIProvider:
     return ReplicateProvider()
 
 
-async def dispatch(
+def dispatch(
     provider: AIProvider,
     wav_path: Path,
     start_sec: float,
@@ -153,7 +153,7 @@ async def dispatch(
 ) -> bytes:
     segment_bytes, duration_sec = slice_segment(wav_path, start_sec, end_sec)
     full_prompt = build_prompt(mode, prompt)
-    return await provider.modify(
+    return provider.modify(
         segment_audio=segment_bytes,
         segment_duration_sec=duration_sec,
         mode=mode,

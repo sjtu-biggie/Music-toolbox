@@ -1,8 +1,11 @@
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from .config import StaticConfig
 from .models.schemas import AIJob
 from .api.routes import audio, midi, ai
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -16,8 +19,9 @@ async def lifespan(app: FastAPI):
                     job.status = "failed"
                     job.error_msg = "Server restarted"
                     job_file.write_text(job.model_dump_json())
-            except Exception:
-                pass
+                    logger.info("Reset stale job %s to failed", job.id)
+            except Exception as exc:
+                logger.warning("Skipping corrupt job file %s: %s", job_file.name, exc)
     yield
 
 

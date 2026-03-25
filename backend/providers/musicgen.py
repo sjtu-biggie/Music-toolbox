@@ -1,6 +1,7 @@
 """MusicGen-Melody provider for local GPU inference."""
 import io
-from functools import lru_cache
+import logging
+import threading
 from typing import Literal
 import numpy as np
 import soundfile as sf
@@ -9,22 +10,33 @@ from .base import AIProvider
 from ..config import StaticConfig
 
 SR = StaticConfig.INTERNAL_SAMPLE_RATE
+logger = logging.getLogger(__name__)
+
+_model_lock = threading.Lock()
+_cached_model: tuple | None = None
 
 
-@lru_cache(maxsize=1)
 def _load_model():
-    from transformers import AutoProcessor, MusicgenMelodyForConditionalGeneration
-    processor = AutoProcessor.from_pretrained("facebook/musicgen-melody")
-    model = MusicgenMelodyForConditionalGeneration.from_pretrained("facebook/musicgen-melody")
-    try:
-        model = model.to("cuda")
-    except Exception:
-        pass
-    return processor, model
+    """Load processor and model once, thread-safe."""
+    global _cached_model
+    if _cached_model is not None:
+        return _cached_model
+    with _model_lock:
+        if _cached_model is not None:
+            return _cached_model
+        from transformers import AutoProcessor, MusicgenMelodyForConditionalGeneration
+        processor = AutoProcessor.from_pretrained("facebook/musicgen-melody")
+        model = MusicgenMelodyForConditionalGeneration.from_pretrained("facebook/musicgen-melody")
+        try:
+            model = model.to("cuda")
+        except Exception as exc:
+            logger.warning("Failed to move model to CUDA, falling back to CPU: %s", exc)
+        _cached_model = (processor, model)
+        return _cached_model
 
 
 class MusicGenProvider(AIProvider):
-    async def modify(
+    def modify(
         self,
         segment_audio: bytes,
         segment_duration_sec: float,
@@ -59,6 +71,7 @@ class MusicGenProvider(AIProvider):
         with torch.no_grad():
             audio_values = model.generate(**inputs, max_new_tokens=max_tokens)
 
+        # Shape: (batch, channels, samples) -> take first batch item
         generated = audio_values[0].cpu().numpy()
         if generated.ndim == 2:
             generated = generated.mean(axis=0)

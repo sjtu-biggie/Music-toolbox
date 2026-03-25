@@ -2,7 +2,6 @@ import io
 import sys
 import numpy as np
 import soundfile as sf
-import pytest
 from unittest.mock import patch, MagicMock
 from backend.config import StaticConfig
 
@@ -17,25 +16,17 @@ def _make_wav(duration_sec: float, sr: int = SR) -> bytes:
     return buf.getvalue()
 
 
-@pytest.fixture(autouse=True)
-def mock_replicate_module(monkeypatch):
-    """Ensure 'replicate' is importable even if not installed, and set token."""
+def test_replicate_provider_returns_wav_at_internal_rate(monkeypatch):
     monkeypatch.setenv("REPLICATE_API_TOKEN", "test-fake-token")
     mock_mod = MagicMock()
-    with patch.dict(sys.modules, {"replicate": mock_mod}):
-        yield mock_mod
-
-
-@pytest.mark.asyncio
-async def test_replicate_provider_returns_wav_at_internal_rate(mock_replicate_module):
-    from backend.providers.replicate_provider import ReplicateProvider
-
     fake_output_32k = _make_wav(5.0, sr=32000)
-    mock_replicate_module.run = MagicMock(return_value="https://fake-replicate-url/output.wav")
+    mock_mod.run = MagicMock(return_value="https://fake-replicate-url/output.wav")
 
-    with patch("backend.providers.replicate_provider._download_bytes", return_value=fake_output_32k):
+    with patch.dict(sys.modules, {"replicate": mock_mod}), \
+         patch("backend.providers.replicate_provider._download_bytes", return_value=fake_output_32k):
+        from backend.providers.replicate_provider import ReplicateProvider
         provider = ReplicateProvider()
-        result = await provider.modify(
+        result = provider.modify(
             segment_audio=_make_wav(5.0),
             segment_duration_sec=5.0,
             mode="style",
@@ -48,10 +39,9 @@ async def test_replicate_provider_returns_wav_at_internal_rate(mock_replicate_mo
     assert len(audio) > 0
 
 
-@pytest.mark.asyncio
-async def test_replicate_provider_passes_input_audio(mock_replicate_module):
-    from backend.providers.replicate_provider import ReplicateProvider
-
+def test_replicate_provider_passes_input_audio(monkeypatch):
+    monkeypatch.setenv("REPLICATE_API_TOKEN", "test-fake-token")
+    mock_mod = MagicMock()
     segment = _make_wav(5.0)
     captured_input = {}
 
@@ -59,11 +49,13 @@ async def test_replicate_provider_passes_input_audio(mock_replicate_module):
         captured_input.update(input)
         return "https://fake-replicate-url/output.wav"
 
-    mock_replicate_module.run = fake_run
+    mock_mod.run = fake_run
 
-    with patch("backend.providers.replicate_provider._download_bytes", return_value=_make_wav(5.0, sr=32000)):
+    with patch.dict(sys.modules, {"replicate": mock_mod}), \
+         patch("backend.providers.replicate_provider._download_bytes", return_value=_make_wav(5.0, sr=32000)):
+        from backend.providers.replicate_provider import ReplicateProvider
         provider = ReplicateProvider()
-        await provider.modify(
+        provider.modify(
             segment_audio=segment,
             segment_duration_sec=5.0,
             mode="melody",

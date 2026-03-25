@@ -4,7 +4,7 @@ from typing import Literal
 
 class AIProvider(ABC):
     @abstractmethod
-    async def modify(
+    def modify(
         self,
         segment_audio: bytes,
         segment_duration_sec: float,

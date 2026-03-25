@@ -3,7 +3,7 @@ import numpy as np
 import soundfile as sf
 import pytest
 from pathlib import Path
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 from backend.services.ai_service import (
     slice_segment, build_prompt, splice_segment,
     resample_audio, rms_normalize, crossfade_edges, match_duration,
@@ -224,15 +224,14 @@ def test_splice_segment_no_crossfade_still_works(tmp_path):
 
 
 # dispatch
-@pytest.mark.asyncio
-async def test_dispatch_calls_provider_with_correct_args(tmp_path):
-    mock_provider = AsyncMock()
-    mock_provider.modify = AsyncMock(return_value=_make_wav(5.0, freq=880.0))
+def test_dispatch_calls_provider_with_correct_args(tmp_path):
+    mock_provider = MagicMock()
+    mock_provider.modify = MagicMock(return_value=_make_wav(5.0, freq=880.0))
 
     wav_path = tmp_path / "track.wav"
     wav_path.write_bytes(_make_wav(20.0))
 
-    result = await dispatch(
+    result = dispatch(
         provider=mock_provider,
         wav_path=wav_path,
         start_sec=5.0,
