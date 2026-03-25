@@ -205,6 +205,7 @@ input, select {
 .source-toggle input[type="radio"]:disabled + label {
   opacity: 0.4;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* ── Unified Waveform + Piano Roll ── */

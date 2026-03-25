@@ -47,7 +47,7 @@ export function renderToolbar(
           <label for="tb-track">Track</label>
           <select id="tb-track">
             ${options.tracks.map((t) =>
-              `<option value="${t.track_id}" ${t.track_id === options.activeTrackId ? "selected" : ""}>${escapeHtml(t.name)}</option>`
+              `<option value="${escapeHtml(t.track_id)}" ${t.track_id === options.activeTrackId ? "selected" : ""}>${escapeHtml(t.name)}</option>`
             ).join("")}
           </select>
         </div>
@@ -66,7 +66,7 @@ export function renderToolbar(
         </div>
         <div class="control-divider"></div>
         <div class="control-group">
-          <button class="btn-action" id="tb-region" disabled>Play Region</button>
+          <button class="btn-action" id="tb-region" disabled title="Play selected region (original audio)">Play Region</button>
         </div>
       </div>
       <div class="control-row">

@@ -93,4 +93,53 @@ describe("renderToolbar", () => {
     const { container } = setup();
     expect(container.querySelector(".control-bar")).toBeTruthy();
   });
+
+  it("calls onPlayRegion when region button clicked", () => {
+    const { container, callbacks, controls } = setup();
+    controls.setRegionEnabled(true);
+    (container.querySelector("#tb-region") as HTMLElement).click();
+    expect(callbacks.onPlayRegion).toHaveBeenCalledOnce();
+  });
+
+  it("calls onSourceChange when source radio changed", () => {
+    const { container, callbacks, controls } = setup();
+    controls.setSynthEnabled(true);
+    const synthRadio = container.querySelector("#src-synth") as HTMLInputElement;
+    synthRadio.checked = true;
+    synthRadio.dispatchEvent(new Event("change"));
+    expect(callbacks.onSourceChange).toHaveBeenCalledWith("synth");
+  });
+
+  it("calls onTrackChange when track select changed", () => {
+    const { container, callbacks } = setup();
+    const select = container.querySelector("#tb-track") as HTMLSelectElement;
+    select.value = "t1";
+    select.dispatchEvent(new Event("change"));
+    expect(callbacks.onTrackChange).toHaveBeenCalledWith("t1");
+  });
+
+  it("calls onInstrumentChange when instrument select changed", () => {
+    const { container, callbacks } = setup();
+    const select = container.querySelector("#tb-instrument") as HTMLSelectElement;
+    select.value = "violin";
+    select.dispatchEvent(new Event("change"));
+    expect(callbacks.onInstrumentChange).toHaveBeenCalledWith("violin");
+  });
+
+  it("getInstrument returns current instrument value", () => {
+    const { container, controls } = setup();
+    const select = container.querySelector("#tb-instrument") as HTMLSelectElement;
+    select.value = "violin";
+    expect(controls.getInstrument()).toBe("violin");
+  });
+
+  it("setRegionEnabled enables/disables region button", () => {
+    const { container, controls } = setup();
+    const btn = container.querySelector("#tb-region") as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    controls.setRegionEnabled(true);
+    expect(btn.disabled).toBe(false);
+    controls.setRegionEnabled(false);
+    expect(btn.disabled).toBe(true);
+  });
 });

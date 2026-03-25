@@ -39,6 +39,7 @@ export function renderEditorView(container: HTMLElement) {
   let synthUrl: string | null = null;
   let toolbarControls: ToolbarControls;
   let selectedInstrument = "piano";
+  let regionAudio: HTMLAudioElement | null = null;
 
   // Layout
   container.innerHTML = `
@@ -149,10 +150,9 @@ export function renderEditorView(container: HTMLElement) {
     try {
       const result = await synthesize(trackId, selectedInstrument);
       synthUrl = result.playback_url;
-      // Switch to synth source
       toolbarControls?.setSynthEnabled(true);
       toolbarControls?.setSource("synth");
-      ws.load(synthUrl);
+      handleSourceChange("synth");
       setStatus(`Synthesized with ${result.instrument}.`);
     } catch (e) {
       setStatus(`Synthesize failed: ${e}`);
@@ -164,10 +164,13 @@ export function renderEditorView(container: HTMLElement) {
       setStatus("No region selected. Drag on waveform or piano roll.");
       return;
     }
-    // Region always plays original audio (region slicing is from original file)
+    if (regionAudio) {
+      regionAudio.pause();
+      regionAudio = null;
+    }
     const url = regionUrl(trackId, currentRegion.startSec, currentRegion.endSec);
-    const audio = new Audio(url);
-    audio.play();
+    regionAudio = new Audio(url);
+    regionAudio.play();
   }
 
   function handleSourceChange(source: AudioSource) {
