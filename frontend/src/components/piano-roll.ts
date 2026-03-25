@@ -463,7 +463,7 @@ export class PianoRoll {
       this.viewport.scrollX += e.deltaX * this.viewport.secPerPx * 2;
       this.viewport.scrollX = Math.max(0, Math.min(this.maxScrollX(), this.viewport.scrollX));
     }
-    if (e.shiftKey) {
+    if (e.shiftKey && e.deltaX === 0) {
       this.viewport.scrollX += e.deltaY * this.viewport.secPerPx * 2;
       this.viewport.scrollX = Math.max(0, Math.min(this.maxScrollX(), this.viewport.scrollX));
     } else if (e.ctrlKey || e.metaKey) {

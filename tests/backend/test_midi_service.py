@@ -92,3 +92,21 @@ def test_merge_close_notes_does_not_merge_large_gap():
 
 def test_merge_empty_list():
     assert _merge_close_notes([], 0.15) == []
+
+
+def test_merge_close_notes_merges_overlapping():
+    notes = [
+        _make_note(pitch=60, start=0.0, end=0.6, velocity=80),
+        _make_note(pitch=60, start=0.4, end=1.0, velocity=70),  # overlaps
+    ]
+    result = _merge_close_notes(notes, 0.15)
+    assert len(result) == 1
+    assert result[0].start_sec == 0.0
+    assert result[0].end_sec == 1.0
+    assert result[0].velocity == 80
+
+
+def test_filter_short_notes_keeps_exact_boundary():
+    notes = [_make_note(start=0.0, end=0.08)]  # exactly min_dur
+    result = _filter_short_notes(notes, 0.08)
+    assert len(result) == 1

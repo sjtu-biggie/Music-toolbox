@@ -29,10 +29,10 @@ class Note(BaseModel):
 
 
 class NoteUpdate(BaseModel):
-    pitch_midi: int | None = None
-    start_sec: float | None = None
-    end_sec: float | None = None
-    velocity: int | None = None
+    pitch_midi: int | None = Field(default=None, ge=0, le=127)
+    start_sec: float | None = Field(default=None, ge=0)
+    end_sec: float | None = Field(default=None, ge=0)
+    velocity: int | None = Field(default=None, ge=0, le=127)
 
 
 class AIJob(BaseModel):
