@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { renderToolbar } from "./toolbar";
 
+
 describe("renderToolbar", () => {
   function setup() {
     const container = document.createElement("div");
@@ -10,18 +11,37 @@ describe("renderToolbar", () => {
       onStop: vi.fn(),
       onExtract: vi.fn(),
       onSynthesize: vi.fn(),
+      onPlayRegion: vi.fn(),
+      onSourceChange: vi.fn(),
+      onInstrumentChange: vi.fn(),
+      onTrackChange: vi.fn(),
     };
-    renderToolbar(container, callbacks);
-    return { container, callbacks };
+    const options = {
+      tracks: [{ track_id: "t1", name: "Test Track" }],
+      activeTrackId: "t1",
+      instruments: ["piano", "violin"],
+      defaultInstrument: "piano",
+    };
+    const controls = renderToolbar(container, options, callbacks);
+    return { container, callbacks, controls };
   }
 
-  it("renders all transport buttons", () => {
+  it("renders all transport and action buttons", () => {
     const { container } = setup();
     expect(container.querySelector("#tb-play")).toBeTruthy();
     expect(container.querySelector("#tb-pause")).toBeTruthy();
     expect(container.querySelector("#tb-stop")).toBeTruthy();
     expect(container.querySelector("#tb-extract")).toBeTruthy();
     expect(container.querySelector("#tb-synth")).toBeTruthy();
+    expect(container.querySelector("#tb-region")).toBeTruthy();
+  });
+
+  it("renders source toggle with original checked", () => {
+    const { container } = setup();
+    const original = container.querySelector("#src-original") as HTMLInputElement;
+    const synth = container.querySelector("#src-synth") as HTMLInputElement;
+    expect(original.checked).toBe(true);
+    expect(synth.disabled).toBe(true);
   });
 
   it("calls onPlay when play clicked", () => {
@@ -54,9 +74,23 @@ describe("renderToolbar", () => {
     expect(callbacks.onSynthesize).toHaveBeenCalledOnce();
   });
 
-  it("appends toolbar as child of container", () => {
+  it("setSynthEnabled enables synth radio", () => {
+    const { container, controls } = setup();
+    const synth = container.querySelector("#src-synth") as HTMLInputElement;
+    expect(synth.disabled).toBe(true);
+    controls.setSynthEnabled(true);
+    expect(synth.disabled).toBe(false);
+  });
+
+  it("setSource switches active radio", () => {
+    const { controls } = setup();
+    controls.setSynthEnabled(true);
+    controls.setSource("synth");
+    expect(controls.getSource()).toBe("synth");
+  });
+
+  it("renders control-bar container", () => {
     const { container } = setup();
-    expect(container.children).toHaveLength(1);
-    expect(container.children[0].classList.contains("toolbar")).toBe(true);
+    expect(container.querySelector(".control-bar")).toBeTruthy();
   });
 });
