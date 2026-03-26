@@ -48,8 +48,8 @@ describe("renderUpload", () => {
   it("renders existing tracks from state", () => {
     mockGetState.mockReturnValue({
       tracks: [
-        { track_id: "t1", filename: "song.mp3", duration_sec: 4.5 },
-        { track_id: "t2", filename: "voice.wav", duration_sec: 2.1 },
+        { track_id: "t1", name: "song.mp3", filename: "song.mp3", duration_sec: 4.5 },
+        { track_id: "t2", name: "voice.wav", filename: "voice.wav", duration_sec: 2.1 },
       ],
       activeTrackId: "t1",
     });
@@ -63,7 +63,7 @@ describe("renderUpload", () => {
   });
 
   it("calls uploadTrack on button click and updates state", async () => {
-    mockUpload.mockResolvedValue({ track_id: "new-t", duration_sec: 3.0, sample_rate: 22050 });
+    mockUpload.mockResolvedValue({ track_id: "new-t", name: "test.wav", duration_sec: 3.0, sample_rate: 22050 });
 
     renderUpload(container);
 
@@ -78,7 +78,7 @@ describe("renderUpload", () => {
 
     // Click upload
     uploadBtn.click();
-    await vi.waitFor(() => expect(mockUpload).toHaveBeenCalledWith(file));
+    await vi.waitFor(() => expect(mockUpload).toHaveBeenCalledWith(file, "test.wav"));
     await vi.waitFor(() => expect(mockSetState).toHaveBeenCalled());
 
     const call = mockSetState.mock.calls[0][0];
@@ -88,7 +88,7 @@ describe("renderUpload", () => {
 
   it("sets active track when track button clicked", () => {
     mockGetState.mockReturnValue({
-      tracks: [{ track_id: "t1", filename: "a.wav", duration_sec: 1 }],
+      tracks: [{ track_id: "t1", name: "a.wav", filename: "a.wav", duration_sec: 1 }],
       activeTrackId: null,
     });
 

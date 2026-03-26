@@ -291,3 +291,127 @@ async def test_region_playback_streams_audio(client, wav_bytes):
     resp = await client.get(f"/audio/{tid}/region?start_sec=0.0&end_sec=1.0")
     assert resp.status_code == 200
     assert "audio" in resp.headers["content-type"]
+
+
+@pytest.mark.anyio
+async def test_ai_modify_returns_job_id(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "AI Test"},
+    )
+    tid = upload.json()["track_id"]
+    await client.post(f"/midi/{tid}/extract")
+
+    resp = await client.post(f"/ai/{tid}/modify", json={
+        "mode": "style",
+        "prompt": "make it jazzy",
+        "start_sec": 0.0,
+        "end_sec": 1.0,
+        "provider": "local",
+    })
+    assert resp.status_code == 200
+    assert "job_id" in resp.json()
+
+
+@pytest.mark.anyio
+async def test_ai_modify_invalid_region_returns_422(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "AI Invalid Region"},
+    )
+    tid = upload.json()["track_id"]
+    resp = await client.post(f"/ai/{tid}/modify", json={
+        "mode": "style", "prompt": "test",
+        "start_sec": 5.0, "end_sec": 2.0,
+        "provider": "local",
+    })
+    assert resp.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_ai_job_status_reachable(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "AI Job Status"},
+    )
+    tid = upload.json()["track_id"]
+    await client.post(f"/midi/{tid}/extract")
+
+    modify = await client.post(f"/ai/{tid}/modify", json={
+        "mode": "melody", "prompt": "test", "start_sec": 0.0, "end_sec": 1.0, "provider": "local",
+    })
+    job_id = modify.json()["job_id"]
+    resp = await client.get(f"/ai/jobs/{job_id}")
+    assert resp.status_code == 200
+    assert resp.json()["status"] in ("pending", "running", "done", "failed")
+
+
+@pytest.mark.anyio
+async def test_ai_job_result_not_found_before_done(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "AI Result Test"},
+    )
+    tid = upload.json()["track_id"]
+    await client.post(f"/midi/{tid}/extract")
+
+    modify = await client.post(f"/ai/{tid}/modify", json={
+        "mode": "style", "prompt": "test", "start_sec": 0.0, "end_sec": 1.0, "provider": "local",
+    })
+    job_id = modify.json()["job_id"]
+    # Result WAV won't exist yet (job is just submitted)
+    resp = await client.get(f"/ai/jobs/{job_id}/result")
+    assert resp.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_ai_compare_validates_job_ownership(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "Compare Test"},
+    )
+    tid = upload.json()["track_id"]
+    await client.post(f"/midi/{tid}/extract")
+
+    modify = await client.post(f"/ai/{tid}/modify", json={
+        "mode": "style", "prompt": "test", "start_sec": 0.0, "end_sec": 1.0, "provider": "local",
+    })
+    job_id = modify.json()["job_id"]
+    # Compare with wrong track_id
+    import uuid
+    fake_tid = str(uuid.uuid4())
+    resp = await client.get(f"/ai/{fake_tid}/compare?job_id={job_id}")
+    assert resp.status_code == 400
+
+
+@pytest.mark.anyio
+async def test_ai_modify_rejects_invalid_job_id(client, wav_bytes):
+    # Non-UUID job_id should be rejected
+    resp = await client.get("/ai/jobs/not-a-valid-uuid")
+    assert resp.status_code == 400
+
+
+@pytest.mark.anyio
+async def test_ai_splice_requires_done_status(client, wav_bytes):
+    upload = await client.post(
+        "/audio/upload",
+        files={"file": ("t.wav", wav_bytes, "audio/wav")},
+        data={"name": "Splice Test"},
+    )
+    tid = upload.json()["track_id"]
+    await client.post(f"/midi/{tid}/extract")
+
+    modify = await client.post(f"/ai/{tid}/modify", json={
+        "mode": "style", "prompt": "test", "start_sec": 0.0, "end_sec": 1.0, "provider": "local",
+    })
+    job_id = modify.json()["job_id"]
+    # Splice before job is done
+    resp = await client.post(f"/ai/{tid}/splice", json={
+        "job_id": job_id, "force_duration_match": False,
+    })
+    assert resp.status_code == 409

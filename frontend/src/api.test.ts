@@ -27,11 +27,11 @@ beforeEach(() => {
 describe("api client", () => {
   describe("uploadTrack", () => {
     it("sends POST with FormData and returns TrackInfo", async () => {
-      const trackInfo = { track_id: "abc", duration_sec: 3.2, sample_rate: 22050 };
+      const trackInfo = { track_id: "abc", name: "test.wav", duration_sec: 3.2, sample_rate: 22050 };
       mockFetch.mockResolvedValue(jsonResponse(trackInfo));
 
       const file = new File(["audio"], "test.wav", { type: "audio/wav" });
-      const result = await uploadTrack(file);
+      const result = await uploadTrack(file, "test.wav");
 
       expect(mockFetch).toHaveBeenCalledOnce();
       const [url, opts] = mockFetch.mock.calls[0];
@@ -44,7 +44,7 @@ describe("api client", () => {
     it("throws on non-ok response", async () => {
       mockFetch.mockResolvedValue(jsonResponse({ detail: "Bad format" }, 400));
       const file = new File(["audio"], "test.txt");
-      await expect(uploadTrack(file)).rejects.toThrow("Bad format");
+      await expect(uploadTrack(file, "test.txt")).rejects.toThrow("Bad format");
     });
   });
 
@@ -122,7 +122,7 @@ describe("api client", () => {
   describe("error handling", () => {
     it("falls back to statusText when response is not JSON", async () => {
       mockFetch.mockResolvedValue(new Response("not json", { status: 500, statusText: "Internal Server Error" }));
-      await expect(uploadTrack(new File(["x"], "x.wav"))).rejects.toThrow("Internal Server Error");
+      await expect(uploadTrack(new File(["x"], "x.wav"), "x.wav")).rejects.toThrow("Internal Server Error");
     });
   });
 });

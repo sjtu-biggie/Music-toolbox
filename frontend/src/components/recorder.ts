@@ -41,9 +41,10 @@ export function renderRecorder(container: HTMLElement) {
           processBtn.disabled = true;
           status.textContent = "Processing...";
           try {
-            const result = await recordTrack(blob);
+            const result = await recordTrack(blob, "Recording");
             const tracks = [...getState().tracks, {
               track_id: result.track_id,
+              name: result.name,
               filename: "recording.wav",
               duration_sec: result.duration_sec,
             }];

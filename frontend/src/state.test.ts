@@ -26,7 +26,7 @@ describe("state", () => {
   });
 
   it("merges partial updates", () => {
-    setState({ tracks: [{ track_id: "t1", filename: "a.wav", duration_sec: 3 }] });
+    setState({ tracks: [{ track_id: "t1", name: "a.wav", filename: "a.wav", duration_sec: 3 }] });
     setState({ activeTrackId: "t1" });
     expect(getState().tracks).toHaveLength(1);
     expect(getState().activeTrackId).toBe("t1");

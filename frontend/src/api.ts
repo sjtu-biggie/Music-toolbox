@@ -128,3 +128,47 @@ export async function getInstruments(): Promise<InstrumentList> {
   _cachedInstruments = await request<InstrumentList>("/midi/instruments/list");
   return _cachedInstruments;
 }
+
+// AI modification types and methods
+
+export interface AIJob {
+  job_id: string;
+  status: "pending" | "running" | "done" | "failed";
+  result_url?: string;
+  error_msg?: string;
+}
+
+export async function requestAIModify(
+  trackId: string,
+  mode: "style" | "melody" | "accompaniment",
+  prompt: string,
+  startSec: number,
+  endSec: number,
+  provider: "local" | "replicate"
+): Promise<{ job_id: string }> {
+  return request(`/ai/${trackId}/modify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mode, prompt, start_sec: startSec, end_sec: endSec, provider,
+    }),
+  });
+}
+
+export async function pollJob(jobId: string): Promise<AIJob> {
+  return request(`/ai/jobs/${jobId}`);
+}
+
+export function aiResultUrl(jobId: string): string {
+  return `/ai/jobs/${jobId}/result`;
+}
+
+export async function spliceAIResult(
+  trackId: string, jobId: string, forceDurationMatch = false
+): Promise<{ spliced_track_id: string }> {
+  return request(`/ai/${trackId}/splice`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job_id: jobId, force_duration_match: forceDurationMatch }),
+  });
+}

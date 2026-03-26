@@ -42,6 +42,8 @@ export interface PianoRollTheme {
   regionColor: string;
   textColor: string;
   keyLabelBg: string;
+  scrollbarTrack: string;
+  scrollbarThumb: string;
 }
 
 export const darkTheme: PianoRollTheme = {
@@ -56,4 +58,6 @@ export const darkTheme: PianoRollTheme = {
   regionColor: "rgba(233, 69, 96, 0.15)",
   textColor: "#a0a0a0",
   keyLabelBg: "#0f0f24",
+  scrollbarTrack: "#0f0f24",
+  scrollbarThumb: "#3a3a5a",
 };

@@ -14,10 +14,39 @@ _ONNX_MODEL_PATH = ICASSP_2022_MODEL_PATH.parent / (
 )
 
 
+def _filter_short_notes(notes: list[Note], min_dur: float) -> list[Note]:
+    """Remove notes shorter than min_dur seconds."""
+    return [n for n in notes if (n.end_sec - n.start_sec) >= min_dur]
+
+
+def _merge_close_notes(notes: list[Note], gap_sec: float) -> list[Note]:
+    """Merge consecutive same-pitch notes separated by less than gap_sec."""
+    if not notes:
+        return notes
+    sorted_notes = sorted(notes, key=lambda n: (n.pitch_midi, n.start_sec))
+    merged: list[Note] = [sorted_notes[0].model_copy()]
+    for note in sorted_notes[1:]:
+        prev = merged[-1]
+        if note.pitch_midi == prev.pitch_midi and (note.start_sec - prev.end_sec) < gap_sec:
+            # Merge: extend prev to cover both, keep higher velocity
+            merged[-1] = prev.model_copy(update={
+                "end_sec": max(prev.end_sec, note.end_sec),
+                "velocity": max(prev.velocity, note.velocity),
+            })
+        else:
+            merged.append(note.model_copy())
+    return merged
+
+
 def extract_midi(audio_path: Path, midi_path: Path, track_id: UUID) -> list[Note]:
     _model_output, midi_data, _note_events = predict(
         str(audio_path),
         model_or_model_path=_ONNX_MODEL_PATH,
+        onset_threshold=StaticConfig.MIDI_ONSET_THRESHOLD,
+        frame_threshold=StaticConfig.MIDI_FRAME_THRESHOLD,
+        minimum_note_length=StaticConfig.MIDI_MIN_NOTE_LENGTH_MS,
+        minimum_frequency=StaticConfig.MIDI_MIN_FREQUENCY,
+        maximum_frequency=StaticConfig.MIDI_MAX_FREQUENCY,
     )
     midi_data.write(str(midi_path))
     notes = []
@@ -31,6 +60,8 @@ def extract_midi(audio_path: Path, midi_path: Path, track_id: UUID) -> list[Note
                 end_sec=float(note.end),
                 velocity=int(note.velocity),
             ))
+    notes = _filter_short_notes(notes, StaticConfig.MIN_NOTE_SEC)
+    notes = _merge_close_notes(notes, StaticConfig.MERGE_GAP_SEC)
     return notes
 
 

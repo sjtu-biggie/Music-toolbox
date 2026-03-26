@@ -1,7 +1,7 @@
 type Listener = () => void;
 
 export interface AppState {
-  tracks: Array<{ track_id: string; filename: string; duration_sec: number }>;
+  tracks: Array<{ track_id: string; name: string; filename: string; duration_sec: number }>;
   activeTrackId: string | null;
 }
 
